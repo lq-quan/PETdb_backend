@@ -30,7 +30,7 @@ public class RegisterController {
             map.put("email", email);
         }
         else
-            return Result.error("The name was already used by others!");
+            return Result.error("The name was already used by others!", 50101);
         String code = registerService.validateEmail(email);
         if(code != null) {
             map.put("code", code);
