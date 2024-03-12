@@ -14,14 +14,17 @@ public class UserInfoService {
     UserMapper userMapper;
 
     public UserInfo getUserInfo(String jwtUser){
-        Claims claims;
-        try{
-            claims = JWTHelper.jwtUnpack(jwtUser);
-        }catch (ExpiredJwtException e){
-            return null;
-        }
+        Claims claims = JWTHelper.jwtUnpack(jwtUser);
         String username = claims.get("username", String.class);
         Integer id = userMapper.getIdByName(username);
         return userMapper.getInfoById(id);
+    }
+
+    public void changeInfo(String token, UserInfo userInfo){
+        Claims claims = JWTHelper.jwtUnpack(token);
+        String username = claims.get("username", String.class);
+        Integer id = userMapper.getIdByName(username);
+        userInfo.setId(id);
+        userMapper.changeUserInfo(userInfo);
     }
 }

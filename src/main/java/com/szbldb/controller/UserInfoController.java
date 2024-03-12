@@ -2,8 +2,11 @@ package com.szbldb.controller;
 
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.UserPojo;
+import com.szbldb.pojo.UserToken;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.service.UserInfoService;
+import com.szbldb.util.JWTHelper;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,17 +19,17 @@ public class UserInfoController {
     private UserInfoService userInfoService;
 
     @RequestMapping("/PETdatabase/user/info")
-    public Result getInfo(UserPojo userPojo){
-        String jwtUser = userPojo.getJwtUser();
-        System.out.println(jwtUser);
-        UserInfo userInfo = userInfoService.getUserInfo(jwtUser);
+    public Result getInfo(String token){
+        System.out.println(token);
+        UserInfo userInfo = userInfoService.getUserInfo(token);
         if(userInfo == null)
             return Result.error("Not log in yet!", 50008);
         return Result.success(userInfo);
     }
 
-//    @RequestMapping("/PETdatabase/user/info")
-//    public Result createInfo(@RequestBody UserInfo userInfo){
-//
-//    }
+    @RequestMapping("/PETdatabase/user/info/change")
+    public Result createInfo(String token, @RequestBody UserInfo userInfo){
+        userInfoService.changeInfo(token, userInfo);
+        return Result.success();
+    }
 }

@@ -2,22 +2,20 @@ package com.szbldb.service;
 
 import com.szbldb.dao.UserMapper;
 import com.szbldb.pojo.User;
+import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.util.JWTHelper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.Map;
 import java.util.Random;
 
 @Service
@@ -69,9 +67,15 @@ public class RegisterService {
         return preCode.equals(check);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public boolean signup(String username, String password, String email){
         User user = new User(username, password, email);
-        return userMapper.insertUser(user) != 0;
+        userMapper.insertUser(user);
+        UserInfo userInfo = new UserInfo();
+        userInfo.setId(user.getId());
+        userInfo.setName(username);
+        userMapper.initUserInfo(userInfo);
+        return true;
     }
 
     public String digestMD5(String code){
