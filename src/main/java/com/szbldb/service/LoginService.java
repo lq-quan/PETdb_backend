@@ -2,13 +2,8 @@ package com.szbldb.service;
 
 import com.szbldb.dao.UserMapper;
 import com.szbldb.pojo.User;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Date;
-import java.util.Map;
 
 @Service
 public class LoginService {

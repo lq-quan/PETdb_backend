@@ -4,7 +4,6 @@ import com.szbldb.dao.UserMapper;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.util.JWTHelper;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

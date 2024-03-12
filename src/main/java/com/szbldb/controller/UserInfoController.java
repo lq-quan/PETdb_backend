@@ -1,12 +1,8 @@
 package com.szbldb.controller;
 
 import com.szbldb.pojo.Result;
-import com.szbldb.pojo.UserPojo;
-import com.szbldb.pojo.UserToken;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.service.UserInfoService;
-import com.szbldb.util.JWTHelper;
-import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
