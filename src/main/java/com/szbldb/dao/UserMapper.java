@@ -30,6 +30,6 @@ public interface UserMapper {
     @Insert("insert into userinfo (id, name) value (#{id}, #{name})")
     void initUserInfo(UserInfo userInfo);
 
-    @Update("update userinfo set name = #{name}, roles = #{name}, introduction = #{introduction}, avatar = #{avatar} where id = #{id}")
+    @Update("update userinfo set name = #{name}, roles = #{roles}, introduction = #{introduction}, avatar = #{avatar} where id = #{id}")
     void changeUserInfo(UserInfo userInfo);
 }

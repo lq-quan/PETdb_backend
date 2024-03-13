@@ -16,6 +16,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         String jwtUser = request.getHeader("token");
+        System.out.println("interceptor: " + jwtUser);
         if(!StringUtils.hasLength(jwtUser)){
             Result error = Result.error("Not_Login", 50008);
             String notLogin = JSONObject.toJSONString(error);

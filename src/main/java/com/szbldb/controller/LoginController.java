@@ -20,7 +20,7 @@ public class LoginController {
     public Result login(@RequestBody User user) {
         String username = user.getUsername();
         String password = user.getPassword();
-        System.out.println(user);
+//        System.out.println(user);
         if (loginService.check(username, password)) {
             return Result.success(JWTHelper.generateUserPojo(username));
         }

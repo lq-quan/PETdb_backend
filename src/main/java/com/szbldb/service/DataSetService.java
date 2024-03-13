@@ -24,9 +24,4 @@ public class DataSetService {
         List<DataSet> dataSets = dataSetMapper.searchGlobal(word);
         return new DataSetList(dataSets.size(), dataSets);
     }
-
-    public DataSetList searchByCountry(String country){
-        List<DataSet> dataSets = dataSetMapper.searchByCountry(country);
-        return new DataSetList(dataSets.size(), dataSets);
-    }
 }

@@ -9,4 +9,15 @@ public class UserInfo {
     private String roles;
     private String introduction;
     private String avatar;
+
+    @Override
+    public String toString() {
+        return "UserInfo{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", roles='" + roles + '\'' +
+                ", introduction='" + introduction + '\'' +
+                ", avatar='" + avatar + '\'' +
+                '}';
+    }
 }

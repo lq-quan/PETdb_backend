@@ -2,9 +2,11 @@ package com.szbldb.controller;
 
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
+import com.szbldb.pojo.userInfoPojo.UserInfoPack;
 import com.szbldb.service.UserInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,7 +17,7 @@ public class UserInfoController {
     private UserInfoService userInfoService;
 
     @RequestMapping("/PETdatabase/user/info")
-    public Result getInfo(String token){
+    public Result getInfo(@RequestHeader String token){
         System.out.println(token);
         UserInfo userInfo = userInfoService.getUserInfo(token);
         if(userInfo == null)
@@ -24,7 +26,9 @@ public class UserInfoController {
     }
 
     @RequestMapping("/PETdatabase/user/info/change")
-    public Result createInfo(String token, @RequestBody UserInfo userInfo){
+    public Result createInfo(@RequestHeader String token, @RequestBody UserInfoPack userInfoPack){
+        UserInfo userInfo = userInfoPack.getUserInfo();
+//        System.out.println(userInfo.toString());
         userInfoService.changeInfo(token, userInfo);
         return Result.success();
     }
