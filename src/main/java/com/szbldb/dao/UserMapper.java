@@ -1,6 +1,6 @@
 package com.szbldb.dao;
 
-import com.szbldb.pojo.User;
+import com.szbldb.pojo.userPojo.User;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import org.apache.ibatis.annotations.*;
 

@@ -1,7 +1,7 @@
 package com.szbldb.util;
 
 
-import com.szbldb.pojo.UserPojo;
+import com.szbldb.pojo.userPojo.UserPojo;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;

@@ -1,7 +1,7 @@
 package com.szbldb.service;
 
 import com.szbldb.dao.UserMapper;
-import com.szbldb.pojo.User;
+import com.szbldb.pojo.userPojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

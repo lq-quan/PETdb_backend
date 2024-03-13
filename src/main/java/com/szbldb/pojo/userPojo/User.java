@@ -1,4 +1,4 @@
-package com.szbldb.pojo;
+package com.szbldb.pojo.userPojo;
 
 import lombok.Data;
 

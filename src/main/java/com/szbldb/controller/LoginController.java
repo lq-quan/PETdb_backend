@@ -1,7 +1,7 @@
 package com.szbldb.controller;
 
 import com.szbldb.pojo.Result;
-import com.szbldb.pojo.User;
+import com.szbldb.pojo.userPojo.User;
 
 import com.szbldb.service.LoginService;
 import com.szbldb.util.JWTHelper;

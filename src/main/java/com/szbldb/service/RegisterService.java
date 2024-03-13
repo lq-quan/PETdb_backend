@@ -1,7 +1,7 @@
 package com.szbldb.service;
 
 import com.szbldb.dao.UserMapper;
-import com.szbldb.pojo.User;
+import com.szbldb.pojo.userPojo.User;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.util.JWTHelper;
 import io.jsonwebtoken.Claims;

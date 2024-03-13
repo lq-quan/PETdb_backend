@@ -1,7 +1,7 @@
 package com.szbldb.controller;
 
 import com.szbldb.pojo.Result;
-import com.szbldb.pojo.UserPojo;
+import com.szbldb.pojo.userPojo.UserPojo;
 import com.szbldb.service.RegisterService;
 import com.szbldb.util.JWTHelper;
 import io.jsonwebtoken.Claims;
