@@ -14,4 +14,5 @@ public class DataSet {
     private String uploader;
     private Long size;
     private LocalDate date;
+    private String description;
 }

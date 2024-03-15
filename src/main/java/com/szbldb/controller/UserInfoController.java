@@ -18,7 +18,7 @@ public class UserInfoController {
 
     @RequestMapping("/PETdatabase/user/info")
     public Result getInfo(@RequestHeader String token){
-        System.out.println(token);
+        //System.out.println(token);
         UserInfo userInfo = userInfoService.getUserInfo(token);
         if(userInfo == null)
             return Result.error("Not log in yet!", 50008);
