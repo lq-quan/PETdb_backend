@@ -2,8 +2,12 @@ package com.szbldb.service;
 
 import com.szbldb.dao.UserMapper;
 import com.szbldb.pojo.userPojo.User;
+import com.szbldb.util.JWTHelper;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 @Service
 public class LoginService {
@@ -11,11 +15,16 @@ public class LoginService {
     @Autowired
     private UserMapper userMapper;
 
-    private static final String jwtKey = "szbldb";
-
     public boolean check(String username, String password){
         User user = userMapper.getUserByUsername(username);
         if(user == null) return false;
         return user.getPassword().equals(password);
+    }
+
+    public void logout(String token){
+        Claims claims = JWTHelper.jwtUnpack(token);
+        String username = claims.get("username", String.class);
+        Date date = new Date(System.currentTimeMillis() + 3600 * 1000);
+        userMapper.logout(username, token, date);
     }
 }

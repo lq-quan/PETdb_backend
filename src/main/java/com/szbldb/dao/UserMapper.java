@@ -4,6 +4,7 @@ import com.szbldb.pojo.userPojo.User;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import org.apache.ibatis.annotations.*;
 
+import java.util.Date;
 import java.util.List;
 
 @Mapper
@@ -13,6 +14,12 @@ public interface UserMapper {
 
     @Select("select * from user where username = #{username}")
     User getUserByUsername(String username);
+
+    @Insert("insert into token_blacklist value (#{username}, #{token}, #{expireTime})")
+    void logout(String username, String token, Date expireTime);
+
+    @Select("select count(*) from token_blacklist where token = #{token}")
+    Integer checkLogout(String token);
 
     @Select("select id from user where username = #{username}")
     Integer getIdByName(String username);

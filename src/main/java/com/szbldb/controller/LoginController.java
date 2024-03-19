@@ -7,6 +7,7 @@ import com.szbldb.service.LoginService;
 import com.szbldb.util.JWTHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class LoginController {
     @Autowired
     private LoginService loginService;
-
 
     @RequestMapping("/PETdatabase/user/login")
     public Result login(@RequestBody User user) {
@@ -26,5 +26,11 @@ public class LoginController {
         }
         else
             return Result.error("Invalid username or incorrect password!", 60204);
+    }
+
+    @RequestMapping("/PETdatabase/user/logout")
+    public Result logout(@RequestHeader String token){
+        loginService.logout(token);
+        return Result.success(true);
     }
 }

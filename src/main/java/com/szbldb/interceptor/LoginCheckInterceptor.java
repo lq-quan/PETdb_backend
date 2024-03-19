@@ -1,11 +1,12 @@
 package com.szbldb.interceptor;
 
 import com.alibaba.fastjson.JSONObject;
+import com.szbldb.dao.UserMapper;
 import com.szbldb.pojo.Result;
 import com.szbldb.util.JWTHelper;
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -13,6 +14,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
 public class LoginCheckInterceptor implements HandlerInterceptor {
+    @Autowired
+    private UserMapper userMapper;
     @Override
     public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         String jwtUser = request.getHeader("token");
@@ -24,8 +27,9 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
             return false;
         }
         try{
+            if(userMapper.checkLogout(jwtUser) != 0) throw new RuntimeException("The token was destroyed by logging out");
             JWTHelper.jwtUnpack(jwtUser);
-        }catch (ExpiredJwtException e){
+        }catch (Exception e){
             Result error = Result.error("Expired", 50007);
             String expired = JSONObject.toJSONString(error);
             response.getWriter().write(expired);

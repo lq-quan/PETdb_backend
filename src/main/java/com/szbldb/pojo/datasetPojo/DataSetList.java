@@ -6,8 +6,8 @@ import java.util.List;
 
 @Data
 public class DataSetList {
-    Integer total;
-    List<DataSet> setList;
+    private Integer total;
+    private List<DataSet> setList;
 
     public DataSetList(Integer total, List<DataSet> setList) {
         this.total = total;
