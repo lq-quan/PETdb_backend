@@ -13,7 +13,7 @@ import java.io.OutputStream;
 @Service
 public class DataDownloadService {
     public void dataDownload(Integer id, HttpServletResponse response) throws IOException {
-        File file = ResourceUtils.getFile("classpath:static/test.txt");
+        File file = ResourceUtils.getFile("classpath:static/ziptest.zip");
         String filename = file.getName();
         try(FileInputStream inputStream = new FileInputStream(file);
             OutputStream outputStream = response.getOutputStream()){
