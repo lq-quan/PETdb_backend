@@ -1,12 +1,13 @@
 package com.szbldb.controller;
 
+import com.szbldb.pojo.Result;
 import com.szbldb.service.DataDownloadService;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
+import java.net.URL;
+
 
 @RestController
 public class DataDownloadController {
@@ -15,10 +16,10 @@ public class DataDownloadController {
     DataDownloadService dataDownloadService;
 
     @RequestMapping("/PETdatabase/dataset/download")
-    public void dataDownload(Integer id, HttpServletResponse response){
-        try{
-            dataDownloadService.dataDownload(id, response);
-        }catch (IOException e){
-        }
+    public Result dataDownload(Integer id) throws Exception{
+        URL url = dataDownloadService.dataDownload(id);
+        if(url == null)
+            return Result.error("Failed to get the file", 50009);
+        return Result.success(url);
     }
 }

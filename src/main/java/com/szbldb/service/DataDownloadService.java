@@ -1,33 +1,36 @@
 package com.szbldb.service;
 
 
-import jakarta.servlet.http.HttpServletResponse;
+import com.aliyun.oss.*;
+import com.aliyun.oss.common.auth.CredentialsProviderFactory;
+import com.aliyun.oss.common.auth.EnvironmentVariableCredentialsProvider;
+import com.aliyun.oss.model.GeneratePresignedUrlRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.OutputStream;
+import java.net.URL;
+import java.util.Date;
+
 
 @Service
 public class DataDownloadService {
-    public void dataDownload(Integer id, HttpServletResponse response) throws IOException {
-        File file = ResourceUtils.getFile("classpath:static/ziptest.zip");
-        String filename = file.getName();
-        try(FileInputStream inputStream = new FileInputStream(file);
-            OutputStream outputStream = response.getOutputStream()){
-            byte[] data = new byte[1024];
-            response.setContentType("application/octet-stream");
-            response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
-            response.setHeader("Accept-Ranges", "bytes");
-            int read;
-            while((read = inputStream.read(data)) != -1){
-                outputStream.write(data, 0, read);
-            }
-            outputStream.flush();
-        }catch (IOException e){
-            e.printStackTrace();
+    public URL dataDownload(Integer id) throws Exception{
+        String endpoint = "https://oss-cn-shenzhen.aliyuncs.com";
+        EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+        String bucketName = "szbldb-test";
+        String objectName = "test/体验商务英语综合教程.pdf";
+        OSS ossClient = new OSSClientBuilder().build(endpoint, credentialsProvider);
+        URL signedUrl;
+        try{
+            Date expiration = new Date(new Date().getTime() + 3600 * 1000L);
+            GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucketName, objectName, HttpMethod.GET);
+            request.setExpiration(expiration);
+            signedUrl = ossClient.generatePresignedUrl(request);
+            return signedUrl;
+        }catch (OSSException oe){
+            System.out.println("Caught an OSSException");
+        }catch (ClientException ce){
+            System.out.println("Caught a ClientException");
         }
+        return null;
     }
 }
