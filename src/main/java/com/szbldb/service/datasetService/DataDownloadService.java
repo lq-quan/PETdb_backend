@@ -1,10 +1,13 @@
-package com.szbldb.service;
+package com.szbldb.service.datasetService;
 
 
 import com.aliyun.oss.*;
 import com.aliyun.oss.common.auth.CredentialsProviderFactory;
 import com.aliyun.oss.common.auth.EnvironmentVariableCredentialsProvider;
 import com.aliyun.oss.model.GeneratePresignedUrlRequest;
+import com.szbldb.dao.DataSetMapper;
+import com.szbldb.pojo.datasetPojo.DataSetLoc;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.net.URL;
@@ -13,11 +16,16 @@ import java.util.Date;
 
 @Service
 public class DataDownloadService {
+
+    @Autowired
+    private DataSetMapper dataSetMapper;
     public URL dataDownload(Integer id) throws Exception{
-        String endpoint = "https://oss-cn-shenzhen.aliyuncs.com";
+        DataSetLoc dataSetLoc = dataSetMapper.searchLoc(id);
+        if(dataSetLoc == null) return null;
+        String endpoint = dataSetLoc.getEndpoint();
         EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
-        String bucketName = "szbldb-test";
-        String objectName = "test/体验商务英语综合教程.pdf";
+        String bucketName = dataSetLoc.getBucketName();
+        String objectName = dataSetLoc.getObjectName();
         OSS ossClient = new OSSClientBuilder().build(endpoint, credentialsProvider);
         URL signedUrl;
         try{

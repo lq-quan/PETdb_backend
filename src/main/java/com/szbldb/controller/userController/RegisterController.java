@@ -1,8 +1,8 @@
-package com.szbldb.controller;
+package com.szbldb.controller.userController;
 
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.userPojo.UserPojo;
-import com.szbldb.service.RegisterService;
+import com.szbldb.service.userService.RegisterService;
 import com.szbldb.util.JWTHelper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

@@ -1,4 +1,4 @@
-package com.szbldb.service;
+package com.szbldb.service.userService;
 
 import com.szbldb.dao.UserMapper;
 import com.szbldb.pojo.userPojo.User;

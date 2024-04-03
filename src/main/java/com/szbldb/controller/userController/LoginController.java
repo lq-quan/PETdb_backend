@@ -1,9 +1,9 @@
-package com.szbldb.controller;
+package com.szbldb.controller.userController;
 
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.userPojo.User;
 
-import com.szbldb.service.LoginService;
+import com.szbldb.service.userService.LoginService;
 import com.szbldb.util.JWTHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;

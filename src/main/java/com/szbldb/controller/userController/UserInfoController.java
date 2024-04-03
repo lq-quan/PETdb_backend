@@ -1,9 +1,9 @@
-package com.szbldb.controller;
+package com.szbldb.controller.userController;
 
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.pojo.userInfoPojo.UserInfoPack;
-import com.szbldb.service.UserInfoService;
+import com.szbldb.service.userService.UserInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;

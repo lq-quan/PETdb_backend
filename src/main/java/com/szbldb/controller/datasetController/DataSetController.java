@@ -1,9 +1,9 @@
-package com.szbldb.controller;
+package com.szbldb.controller.datasetController;
 
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.datasetPojo.DataSet;
 import com.szbldb.pojo.datasetPojo.DataSetList;
-import com.szbldb.service.DataSetService;
+import com.szbldb.service.datasetService.DataSetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
