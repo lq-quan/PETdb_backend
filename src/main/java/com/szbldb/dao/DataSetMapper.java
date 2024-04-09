@@ -16,7 +16,7 @@ public interface DataSetMapper {
     List<DataSet> searchLike(DataSet dataSet);
 
     @Select("select * from dataset where name like '%${word}%' or type like '%${word}%' or uploader like '%${word}%'" +
-            " or description like '%%${word}' collate utf8mb4_general_ci")
+            " or description like '%${word}%' collate utf8mb4_general_ci")
     List<DataSet> searchGlobal(String word);
 
     @Select("select * from dataset_loc where id = #{id}")

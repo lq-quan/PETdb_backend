@@ -13,6 +13,8 @@ import com.szbldb.pojo.datasetPojo.StsTokenInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Service
 public class DataSetUploadService {
     @Autowired
@@ -31,17 +33,17 @@ public class DataSetUploadService {
                             "Effect": "Allow",
                             "Action": "oss:PutObject",
                             "Resource": [
-                                "acs:oss:*:*:szbldb-test/test",
+                                "acs:oss:*:*:szbldb-test/*",
                                 "acs:oss:*:*:szbldb-test/test/*"
                             ]
                         }
                     ]
                 }
                 """;
-        Long durationSeconds = 3600L;
+        Long durationSeconds = 900L;
         StsTokenInfo tokenInfo = new StsTokenInfo();
         tokenInfo.setBucket("szbldb-test");
-        tokenInfo.setRegion("cn-oss-shenzhen");
+        tokenInfo.setRegion("oss-cn-shenzhen");
         try{
             String regionId = "cn-shenzhen";
             DefaultProfile.addEndpoint(regionId, "Sts", endpoint);
@@ -66,6 +68,7 @@ public class DataSetUploadService {
     }
 
     public void uploadMeta(DataSet dataSet){
+        dataSet.setDate(LocalDate.now());
         dataSetMapper.insertDataset(dataSet);
     }
 

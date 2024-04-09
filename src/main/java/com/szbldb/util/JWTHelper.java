@@ -30,7 +30,7 @@ public class JWTHelper {
     public static UserPojo generateUserPojo(String username){
         Map<String, Object> map = new HashMap<>();
         map.put("username", username);
-        String jwtUser = jwtPacker(map, 60);
+        String jwtUser = jwtPacker(map, 1440);
         UserPojo userPojo = new UserPojo();
         userPojo.setJwtUser(jwtUser);
         return userPojo;

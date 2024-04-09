@@ -24,7 +24,7 @@ public class LoginService {
     public void logout(String token){
         Claims claims = JWTHelper.jwtUnpack(token);
         String username = claims.get("username", String.class);
-        Date date = new Date(System.currentTimeMillis() + 3600 * 1000);
+        Date date = new Date(System.currentTimeMillis() + 24 * 3600 * 1000L);
         userMapper.logout(username, token, date);
     }
 }
