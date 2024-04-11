@@ -34,7 +34,7 @@ public class RegisterController {
         String code = registerService.validateEmail(email);
         if(code != null) {
             map.put("code", code);
-            String jwtCode = JWTHelper.jwtPacker(map, 5);
+            String jwtCode = JWTHelper.jwtPacker(map, 10);
             return Result.success(jwtCode);
             //jwtCode:包括username, password, email, 生成的code
         }

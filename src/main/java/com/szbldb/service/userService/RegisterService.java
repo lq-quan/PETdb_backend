@@ -27,7 +27,7 @@ public class RegisterService {
     private JavaMailSender sender;
 
     private static final String subject = "Please verify your account";
-    private static final String content1 = "You are registering for SZBLDB.com. The captcha code is:\n";
+    private static final String content1 = "You are visiting resources in SZBLDB.com. The captcha code is:\n";
     private static final String content2 = "\nIt's valid in 10 minutes.If it's not operated on your own, ignore the Email. \nPlease do not Reply";
     private static final Random random = new Random();
 
@@ -40,7 +40,11 @@ public class RegisterService {
         mail.setSubject(subject);
         StringBuilder code = new StringBuilder();
         for(int i = 0; i < 6; i++){
-            code.append(random.nextInt(0, 10));
+            int next = random.nextInt(0, 36);
+            if(next < 10)
+                code.append(next);
+            else
+                code.append((char)('A' + next - 10));
         }
         mail.setText(content1 + code + content2);
         mail.setTo(email);

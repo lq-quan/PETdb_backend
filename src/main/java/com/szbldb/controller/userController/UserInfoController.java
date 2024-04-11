@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+
 @RestController
 public class UserInfoController {
 
@@ -26,10 +27,13 @@ public class UserInfoController {
     }
 
     @RequestMapping("/PETdatabase/user/info/change")
-    public Result createInfo(@RequestHeader String token, @RequestBody UserInfoPack userInfoPack){
-        UserInfo userInfo = userInfoPack.getUserInfo();
-//        System.out.println(userInfo.toString());
-        userInfoService.changeInfo(token, userInfo);
+    public Result changeInfo(@RequestHeader String token, @RequestBody UserInfoPack userInfoPack){
+        userInfoService.changeInfo(token, userInfoPack.getUserInfo());
         return Result.success();
+    }
+
+    @RequestMapping("/PETdatabase/user/info/getEmail")
+    public Result getEmail(@RequestHeader String token){
+        return Result.success(userInfoService.getEmail(token));
     }
 }

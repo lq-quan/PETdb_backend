@@ -29,4 +29,11 @@ public class ClientLicenseService {
         Integer sid = licenseMapper.getSid(username);
         return checkApplicationBySid(sid);
     }
+
+    public Submission getStatusByUsername(String username){
+        String status = licenseMapper.getStatusByUsername(username);
+        Submission submission = new Submission();
+        submission.setStatus(status);
+        return submission;
+    }
 }

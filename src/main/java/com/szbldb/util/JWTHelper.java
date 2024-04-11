@@ -42,4 +42,9 @@ public class JWTHelper {
                 .parseClaimsJws(jwt)
                 .getBody();
     }
+
+    public static String getUsername(String token){
+        Claims claims = jwtUnpack(token);
+        return claims.get("username", String.class);
+    }
 }

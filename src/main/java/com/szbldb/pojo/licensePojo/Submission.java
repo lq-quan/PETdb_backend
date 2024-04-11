@@ -18,4 +18,21 @@ public class Submission {
     private Integer id;
     private String status;
     private LocalDate date;
+
+    @Override
+    public String toString() {
+        return "Submission{" +
+                "firstname='" + firstname + '\'' +
+                ", lastname='" + lastname + '\'' +
+                ", company='" + company + '\'' +
+                ", degree='" + degree + '\'' +
+                ", department='" + department + '\'' +
+                ", contact='" + contact + '\'' +
+                ", purpose='" + purpose + '\'' +
+                ", address=" + address +
+                ", id=" + id +
+                ", status='" + status + '\'' +
+                ", date=" + date +
+                '}';
+    }
 }

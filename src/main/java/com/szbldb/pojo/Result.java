@@ -26,7 +26,7 @@ public class Result {
     }
 
     public static Result success(){
-        return new Result(20000, "success", null);
+        return new Result(20000, "success", true);
     }
 
     public static Result error(String msg){

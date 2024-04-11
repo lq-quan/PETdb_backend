@@ -28,11 +28,14 @@ public interface UserMapper {
     @Insert("insert into user (username, password, email) VALUE (#{username}, #{password}, #{email})")
     void insertUser(User user);
 
+    @Select("select email from user where username = #{username}")
+    String getEmail(String username);
+
     @Select("select * from userinfo where id = #{id}")
     UserInfo getInfoById(int id);
 
-    @Select("select * from userinfo inner join user u on userinfo.id = u.id and u.username = #{username}")
-    UserInfo getInfoByUsername(String username);
+    @Select("select roles from userinfo inner join user u on userinfo.id = u.id and u.username = #{username}")
+    String getRolesByUsername(String username);
 
     @Insert("insert into userinfo (id, name) value (#{id}, #{name})")
     void initUserInfo(UserInfo userInfo);

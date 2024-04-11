@@ -2,30 +2,33 @@ package com.szbldb.controller.licenseController;
 
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.licensePojo.Submission;
+import com.szbldb.pojo.userPojo.User;
+import com.szbldb.pojo.userPojo.UserPojo;
 import com.szbldb.service.licenseService.ClientLicenseService;
+import com.szbldb.service.userService.RegisterService;
 import com.szbldb.util.JWTHelper;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 public class ClientLicenseController {
     @Autowired
     private ClientLicenseService clientLicenseService;
 
+    @Autowired
+    private RegisterService registerService;
+
     @RequestMapping("/PETdatabase/dataset/license/submit")
     public Result applicationSubmit(@RequestBody Submission submission, @RequestHeader String token){
-        Claims claims;
-        try{
-            claims = JWTHelper.jwtUnpack(token);
-        }catch (ExpiredJwtException e){
-            return Result.error("Not_Login", 50007);
-        }
-        String username = claims.get("username", String.class);
+        //System.out.println(submission);
+        String username = JWTHelper.getUsername(token);
         clientLicenseService.createApplication(submission, username);
         return Result.success();
     }
@@ -37,15 +40,42 @@ public class ClientLicenseController {
             return Result.success(submission);
         }
         else{
-            Claims claims;
-            try{
-                claims = JWTHelper.jwtUnpack(token);
-            }catch (ExpiredJwtException e){
-                return Result.error("Not_Login", 50007);
-            }
-            String username = claims.get("username", String.class);
+            String username = JWTHelper.getUsername(token);
             Submission submission = clientLicenseService.checkApplicationByUsername(username);
             return Result.success(submission);
         }
+    }
+
+    @RequestMapping("/PETdatabase/dataset/license/verifyEmail")
+    public Result verifyEmail(@RequestBody User user){
+        String email = user.getEmail();
+        if(!StringUtils.hasLength(email)){
+            throw new RuntimeException("No email found");
+        }
+        Map<String, Object> map = new HashMap<>();
+        String code = registerService.validateEmail(email);
+        if(code == null){
+            throw new RuntimeException("Fail to send code!");
+        }
+        map.put("code", code);
+        String jwtCode = JWTHelper.jwtPacker(map, 10);
+        return Result.success(jwtCode);
+    }
+
+    @RequestMapping("/PETdatabase/dataset/license/verifyCode")
+    public Result verifyCode(@RequestBody UserPojo userPojo){
+        String jwtCode = userPojo.getJwtCode();
+        String code = userPojo.getCode();
+        if(registerService.checkVerifyCode(jwtCode, code)){
+            return Result.success(true);
+        }
+        else return Result.error("Wrong or Expired code!", 50201);
+    }
+
+    @RequestMapping("/PETdatabase/dataset/license/status")
+    public Result checkStatus(@RequestHeader String token){
+        String username = JWTHelper.getUsername(token);
+        Submission submission = clientLicenseService.getStatusByUsername(username);
+        return Result.success(submission);
     }
 }

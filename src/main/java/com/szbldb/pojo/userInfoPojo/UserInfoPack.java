@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class UserInfoPack {
-    UserInfo userInfo;
+    private UserInfo userInfo;
 }
