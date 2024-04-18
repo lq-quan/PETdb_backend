@@ -26,4 +26,10 @@ public class DataSetController {
         DataSetList dataSetList = dataSetService.searchAllLike(word);
         return Result.success(dataSetList);
     }
+
+    @RequestMapping("/PETdatabase/dataset/detail")
+    public Result getDetail(Integer id){
+        DataSet dataSet = dataSetService.getDetail(id);
+        return Result.success(dataSet);
+    }
 }

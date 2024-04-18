@@ -17,7 +17,7 @@ public class DataDownloadController {
 
     @RequestMapping("/PETdatabase/dataset/download")
     public Result dataDownload(Integer id) throws Exception{
-        System.out.println("DataSet id: " + id);
+        System.out.println("File id: " + id);
         URL url = dataDownloadService.dataDownload(id);
         if(url == null)
             return Result.error("Failed to get the file", 50009);

@@ -3,6 +3,7 @@ package com.szbldb.pojo.datasetPojo;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class DataSet {
@@ -15,4 +16,20 @@ public class DataSet {
     private Long size;
     private LocalDate date;
     private String description;
+    private List<File> files;
+
+    @Override
+    public String toString() {
+        return "DataSet{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", status='" + status + '\'' +
+                ", country='" + country + '\'' +
+                ", uploader='" + uploader + '\'' +
+                ", size=" + size +
+                ", date=" + date +
+                ", description='" + description + '\'' +
+                '}';
+    }
 }

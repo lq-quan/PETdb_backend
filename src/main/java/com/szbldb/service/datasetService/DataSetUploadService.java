@@ -1,5 +1,11 @@
 package com.szbldb.service.datasetService;
 
+import com.aliyun.oss.OSS;
+import com.aliyun.oss.OSSClientBuilder;
+import com.aliyun.oss.OSSException;
+import com.aliyun.oss.common.auth.CredentialsProviderFactory;
+import com.aliyun.oss.common.auth.EnvironmentVariableCredentialsProvider;
+import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyuncs.DefaultAcsClient;
 import com.aliyuncs.auth.sts.AssumeRoleRequest;
 import com.aliyuncs.auth.sts.AssumeRoleResponse;
@@ -9,10 +15,14 @@ import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
 import com.szbldb.dao.DataSetMapper;
 import com.szbldb.pojo.datasetPojo.DataSet;
+import com.szbldb.pojo.datasetPojo.DataSetLoc;
+import com.szbldb.pojo.datasetPojo.File;
 import com.szbldb.pojo.datasetPojo.StsTokenInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 
 @Service
@@ -67,9 +77,54 @@ public class DataSetUploadService {
         return null;
     }
 
-    public void uploadMeta(DataSet dataSet){
+    @Transactional(rollbackFor = Exception.class)
+    public void uploadMeta(DataSet dataSet) throws Exception{
         dataSet.setDate(LocalDate.now());
+        dataSet.setSize(0L);
         dataSetMapper.insertDataset(dataSet);
+        DataSetLoc dataSetLoc = new DataSetLoc();
+        dataSetLoc.setId(dataSet.getId());
+        dataSetLoc.setBucketName("szbldb-test");
+        dataSetLoc.setObjectName(dataSet.getType() + '/' + dataSet.getName() + '/');
+        dataSetMapper.insertLoc(dataSetLoc);
+        //创建OSS目录
+        String endpoint = "https://oss-cn-shenzhen.aliyuncs.com";
+        EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+        String bucketName = "szbldb-test";
+        String objectName = dataSetLoc.getObjectName();
+        System.out.println(dataSetLoc);
+        OSS ossClient = new OSSClientBuilder().build(endpoint, credentialsProvider);
+        try{
+            String content = "";
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, objectName, new ByteArrayInputStream(content.getBytes()));
+            ossClient.putObject(putObjectRequest);
+        }catch (OSSException oe) {
+            System.out.println("Caught an OSSException, which means your request made it to OSS, "
+                    + "but was rejected with an error response for some reason.");
+            System.out.println("Error Message:" + oe.getErrorMessage());
+            System.out.println("Error Code:" + oe.getErrorCode());
+            System.out.println("Request ID:" + oe.getRequestId());
+            System.out.println("Host ID:" + oe.getHostId());
+            throw oe;
+        } finally {
+            if (ossClient != null) {
+                ossClient.shutdown();
+            }
+        }
+    }
+
+    public void changeMeta(DataSet dataSet){
+        dataSet.setDate(LocalDate.now());
+        dataSetMapper.updateDatasetById(dataSet);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public boolean uploadFile(File file){
+        if(dataSetMapper.checkFilename(file.getName(), file.getDatasetId()) != null) return false;
+        file.setDate(LocalDate.now());
+        dataSetMapper.insertFile(file);
+        dataSetMapper.updateSize(file.getSize(), file.getDatasetId());
+        return true;
     }
 
 }

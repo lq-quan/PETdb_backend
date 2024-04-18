@@ -4,8 +4,6 @@ import com.szbldb.pojo.Result;
 import com.szbldb.pojo.licensePojo.SubmissionList;
 import com.szbldb.service.licenseService.AdminLicenseService;
 import com.szbldb.util.JWTHelper;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

@@ -9,6 +9,7 @@ import com.szbldb.dao.DataSetMapper;
 import com.szbldb.pojo.datasetPojo.DataSetLoc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URL;
 import java.util.Date;
@@ -19,13 +20,16 @@ public class DataDownloadService {
 
     @Autowired
     private DataSetMapper dataSetMapper;
-    public URL dataDownload(Integer id) throws Exception{
-        DataSetLoc dataSetLoc = dataSetMapper.searchLoc(id);
+
+    @Transactional(rollbackFor = Exception.class)
+    public URL dataDownload(Integer fileId) throws Exception{
+        DataSetLoc dataSetLoc = dataSetMapper.searchLocByFileId(fileId);
         if(dataSetLoc == null) return null;
         String endpoint = dataSetLoc.getEndpoint();
         EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
         String bucketName = dataSetLoc.getBucketName();
-        String objectName = dataSetLoc.getObjectName();
+        String objectName = dataSetLoc.getObjectName() + dataSetMapper.getFileByFileId(fileId).getName();
+        //System.out.println(objectName);
         OSS ossClient = new OSSClientBuilder().build(endpoint, credentialsProvider);
         URL signedUrl;
         try{
