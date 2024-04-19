@@ -12,15 +12,18 @@ import java.net.URL;
 @RestController
 public class DataDownloadController {
 
-    @Autowired
     DataDownloadService dataDownloadService;
+
+    public DataDownloadController(@Autowired DataDownloadService dataDownloadService) {
+        this.dataDownloadService = dataDownloadService;
+    }
 
     @RequestMapping("/PETdatabase/dataset/download")
     public Result dataDownload(Integer id) throws Exception{
         System.out.println("File id: " + id);
         URL url = dataDownloadService.dataDownload(id);
         if(url == null)
-            return Result.error("Failed to get the file", 50009);
+            return Result.error("Failed to get the file", 40009);
         return Result.success(url);
     }
 }

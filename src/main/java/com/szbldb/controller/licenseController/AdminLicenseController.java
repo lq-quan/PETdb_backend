@@ -11,8 +11,13 @@ import java.util.Map;
 
 @RestController
 public class AdminLicenseController {
-    @Autowired
-    private AdminLicenseService adminLicenseService;
+
+    private final AdminLicenseService adminLicenseService;
+
+    public AdminLicenseController(@Autowired AdminLicenseService adminLicenseService) {
+        this.adminLicenseService = adminLicenseService;
+    }
+
     @RequestMapping("/PETdatabase/dataset/license/admin/get")
     public Result searchSubmission(String word, Integer page, Integer limit){
         SubmissionList submissionList = adminLicenseService.searchSubmissions(word, page, limit);

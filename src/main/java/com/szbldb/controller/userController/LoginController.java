@@ -13,8 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class LoginController {
-    @Autowired
-    private LoginService loginService;
+
+    private final LoginService loginService;
+
+    public LoginController(@Autowired LoginService loginService) {
+        this.loginService = loginService;
+    }
 
     @RequestMapping("/PETdatabase/user/login")
     public Result login(@RequestBody User user) {

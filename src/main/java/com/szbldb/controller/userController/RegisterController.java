@@ -16,8 +16,12 @@ import java.util.Map;
 
 @RestController
 public class RegisterController {
-    @Autowired
-    private RegisterService registerService;
+
+    private final RegisterService registerService;
+
+    public RegisterController(@Autowired RegisterService registerService) {
+        this.registerService = registerService;
+    }
 
     @RequestMapping(value = "/PETdatabase/register/checkUserInfo")
     public Result checkUsername(@RequestBody UserPojo userPojo){

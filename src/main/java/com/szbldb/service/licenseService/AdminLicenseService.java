@@ -11,8 +11,12 @@ import java.util.List;
 
 @Service
 public class AdminLicenseService {
-    @Autowired
-    private LicenseMapper licenseMapper;
+
+    private final LicenseMapper licenseMapper;
+
+    public AdminLicenseService(@Autowired LicenseMapper licenseMapper) {
+        this.licenseMapper = licenseMapper;
+    }
 
     public SubmissionList searchSubmissions(String word, Integer page, Integer limit){
         List<Submission> list = licenseMapper.searchSubmissions(word, (page - 1) * limit, limit);

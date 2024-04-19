@@ -13,8 +13,12 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
 public class AdminCheckInterceptor implements HandlerInterceptor {
-    @Autowired
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
+
+    public AdminCheckInterceptor(@Autowired UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         String token = request.getHeader("token");

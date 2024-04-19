@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class DataSetController {
 
-    @Autowired
-    private DataSetService dataSetService;
+    private final DataSetService dataSetService;
+
+    DataSetController(@Autowired DataSetService dataSetService){
+        this.dataSetService = dataSetService;
+    }
 
     @RequestMapping("/PETdatabase/dataset/list")
     public Result searchList(DataSet dataInfo){
@@ -31,5 +34,17 @@ public class DataSetController {
     public Result getDetail(Integer id){
         DataSet dataSet = dataSetService.getDetail(id);
         return Result.success(dataSet);
+    }
+
+    @RequestMapping("/PETdatabase/dataset/deleteFile")
+    public Result deleteFile(Integer id) throws Exception{
+        dataSetService.deleteFile(id);
+        return Result.success();
+    }
+
+    @RequestMapping("/PETdatabase/dataset/delete")
+    public Result deleteDataset(Integer id) throws Exception{
+        dataSetService.deleteDataset(id);
+        return Result.success();
     }
 }

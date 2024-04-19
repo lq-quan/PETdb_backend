@@ -18,8 +18,11 @@ import java.util.Date;
 @Service
 public class DataDownloadService {
 
-    @Autowired
-    private DataSetMapper dataSetMapper;
+    private final DataSetMapper dataSetMapper;
+
+    public DataDownloadService(@Autowired DataSetMapper dataSetMapper) {
+        this.dataSetMapper = dataSetMapper;
+    }
 
     @Transactional(rollbackFor = Exception.class)
     public URL dataDownload(Integer fileId) throws Exception{

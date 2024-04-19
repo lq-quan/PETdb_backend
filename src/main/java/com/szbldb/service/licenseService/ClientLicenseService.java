@@ -10,8 +10,11 @@ import java.time.LocalDate;
 
 @Service
 public class ClientLicenseService {
-    @Autowired
-    private LicenseMapper licenseMapper;
+    private final LicenseMapper licenseMapper;
+
+    public ClientLicenseService(@Autowired LicenseMapper licenseMapper) {
+        this.licenseMapper = licenseMapper;
+    }
 
     @Transactional(rollbackFor = Exception.class)
     public void createApplication(Submission submission, String username){

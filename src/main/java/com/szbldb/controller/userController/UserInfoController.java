@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UserInfoController {
 
-    @Autowired
-    private UserInfoService userInfoService;
+    private final UserInfoService userInfoService;
+
+    public UserInfoController(@Autowired UserInfoService userInfoService) {
+        this.userInfoService = userInfoService;
+    }
 
     @RequestMapping("/PETdatabase/user/info")
     public Result getInfo(@RequestHeader String token){

@@ -19,11 +19,16 @@ import java.util.Map;
 
 @RestController
 public class ClientLicenseController {
-    @Autowired
-    private ClientLicenseService clientLicenseService;
+
+    private final ClientLicenseService clientLicenseService;
+
+    private final RegisterService registerService;
 
     @Autowired
-    private RegisterService registerService;
+    public ClientLicenseController(ClientLicenseService clientLicenseService, RegisterService registerService) {
+        this.clientLicenseService = clientLicenseService;
+        this.registerService = registerService;
+    }
 
     @RequestMapping("/PETdatabase/dataset/license/submit")
     public Result applicationSubmit(@RequestBody Submission submission, @RequestHeader String token){

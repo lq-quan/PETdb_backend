@@ -20,11 +20,16 @@ import java.util.Random;
 
 @Service
 public class RegisterService {
-    @Autowired
-    private UserMapper userMapper;
+
+    private final UserMapper userMapper;
+
+    private final JavaMailSender sender;
 
     @Autowired
-    private JavaMailSender sender;
+    public RegisterService(UserMapper userMapper, JavaMailSender sender) {
+        this.userMapper = userMapper;
+        this.sender = sender;
+    }
 
     private static final String subject = "Please verify your account";
     private static final String content1 = "You are visiting resources in SZBLDB.com. The captcha code is:\n";

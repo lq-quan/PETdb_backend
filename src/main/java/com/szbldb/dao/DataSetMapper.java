@@ -17,6 +17,9 @@ public interface DataSetMapper {
     @Select("select * from dataset where id = #{id}")
     DataSet getDatasetById(Integer id);
 
+    @Select("select * from dataset where name = #{name} and type = #{type}")
+    DataSet checkDatasetName(String name, String type);
+
     @Select("select * from dataset where name like '%${word}%' or type like '%${word}%' or uploader like '%${word}%'" +
             " or description like '%${word}%' collate utf8mb4_general_ci")
     List<DataSet> searchGlobal(String word);
@@ -24,8 +27,8 @@ public interface DataSetMapper {
     @Select("select * from dataset_loc d inner join files f where f.id = #{id} and d.id = f.datasetId")
     DataSetLoc searchLocByFileId(Integer id);
 
-    @Select("select type from dataset where id = #{id}")
-    String getType(Integer id);
+    @Select("select * from dataset_loc where id = #{id}")
+    DataSetLoc searchLocByDatasetId(Integer id);
 
     @Options(useGeneratedKeys = true, keyProperty = "id")
     @Insert("insert into dataset (name, type, status, country, uploader, size, date, description) VALUE " +
@@ -53,4 +56,16 @@ public interface DataSetMapper {
 
     @Select("select * from files where name = #{filename} and datasetId = #{dataSetId}")
     File checkFilename(String filename, Integer dataSetId);
+
+    @Delete("delete from files where id = #{fileId}")
+    void deleteFile(Integer fileId);
+
+    @Delete("delete from files where datasetId = #{id}")
+    void deleteAllFilesOfDataset(Integer id);
+
+    @Delete("delete from dataset_loc where id = #{id}")
+    void deleteDatasetLoc(Integer id);
+
+    @Delete("delete from dataset where id = #{id}")
+    void deleteDataset(Integer id);
 }

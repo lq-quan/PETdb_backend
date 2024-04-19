@@ -19,6 +19,7 @@ import com.szbldb.pojo.datasetPojo.DataSetLoc;
 import com.szbldb.pojo.datasetPojo.File;
 import com.szbldb.pojo.datasetPojo.StsTokenInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +28,12 @@ import java.time.LocalDate;
 
 @Service
 public class DataSetUploadService {
-    @Autowired
-    private DataSetMapper dataSetMapper;
+    private final DataSetMapper dataSetMapper;
+
+    public DataSetUploadService(@Autowired DataSetMapper dataSetMapper) {
+        this.dataSetMapper = dataSetMapper;
+    }
+
     public StsTokenInfo datasetUpload(){
         String endpoint = "sts.cn-shenzhen.aliyuncs.com";
         String accessKeyId = System.getenv("OSS_ACCESS_KEY_ID");
@@ -78,7 +83,8 @@ public class DataSetUploadService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void uploadMeta(DataSet dataSet) throws Exception{
+    public boolean uploadMeta(DataSet dataSet) throws Exception{
+        if(dataSetMapper.checkDatasetName(dataSet.getName(), dataSet.getType()) != null) return false;
         dataSet.setDate(LocalDate.now());
         dataSet.setSize(0L);
         dataSetMapper.insertDataset(dataSet);
@@ -111,6 +117,7 @@ public class DataSetUploadService {
                 ossClient.shutdown();
             }
         }
+        return true;
     }
 
     public void changeMeta(DataSet dataSet){
@@ -119,7 +126,7 @@ public class DataSetUploadService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public boolean uploadFile(File file){
+    public boolean uploadFile(File file) throws PessimisticLockingFailureException {
         if(dataSetMapper.checkFilename(file.getName(), file.getDatasetId()) != null) return false;
         file.setDate(LocalDate.now());
         dataSetMapper.insertFile(file);

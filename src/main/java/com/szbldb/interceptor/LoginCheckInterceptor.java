@@ -17,8 +17,13 @@ import java.time.format.DateTimeFormatter;
 
 @Component
 public class LoginCheckInterceptor implements HandlerInterceptor {
-    @Autowired
-    private UserMapper userMapper;
+
+    private final UserMapper userMapper;
+
+    public LoginCheckInterceptor(@Autowired UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         String jwtUser = request.getHeader("token");

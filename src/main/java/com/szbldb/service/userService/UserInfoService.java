@@ -8,8 +8,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserInfoService {
-    @Autowired
-    UserMapper userMapper;
+
+    private final UserMapper userMapper;
+
+    public UserInfoService(@Autowired UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
 
     public UserInfo getUserInfo(String jwtUser){
         String username = JWTHelper.getUsername(jwtUser);

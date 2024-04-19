@@ -12,8 +12,11 @@ import java.util.Date;
 @Service
 public class LoginService {
 
-    @Autowired
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
+
+    public LoginService(@Autowired UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
 
     public boolean check(String username, String password){
         User user = userMapper.getUserByUsername(username);
