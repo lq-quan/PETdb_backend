@@ -46,10 +46,13 @@ public interface DataSetMapper {
     void insertFile(File file);
 
     @Update("update dataset set size = size + #{fileSize} where id = #{id}")
-    void updateSize(Integer fileSize, Integer id);
+    void updateSize(Long fileSize, Integer id);
 
     @Select("select * from files where datasetId = #{datasetId}")
     List<File> getFilesByDatasetId(Integer datasetId);
+
+    @Select("select * from dataset inner join files f on dataset.id = f.datasetId and f.id = #{id}")
+    DataSet getDatasetByFileId(Integer id);
 
     @Select("select * from files where id = #{id}")
     File getFileByFileId(Integer id);

@@ -14,23 +14,37 @@ import com.aliyuncs.http.MethodType;
 import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
 import com.szbldb.dao.DataSetMapper;
-import com.szbldb.pojo.datasetPojo.DataSet;
-import com.szbldb.pojo.datasetPojo.DataSetLoc;
-import com.szbldb.pojo.datasetPojo.File;
-import com.szbldb.pojo.datasetPojo.StsTokenInfo;
+import com.szbldb.pojo.datasetPojo.*;
+import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.MinioClient;
+import io.minio.http.Method;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class DataSetUploadService {
     private final DataSetMapper dataSetMapper;
 
-    public DataSetUploadService(@Autowired DataSetMapper dataSetMapper) {
+    private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
+
+    public DataSetUploadService(@Autowired DataSetMapper dataSetMapper) throws UnknownHostException {
         this.dataSetMapper = dataSetMapper;
     }
 
@@ -90,8 +104,13 @@ public class DataSetUploadService {
         dataSetMapper.insertDataset(dataSet);
         DataSetLoc dataSetLoc = new DataSetLoc();
         dataSetLoc.setId(dataSet.getId());
-        dataSetLoc.setBucketName("szbldb-test");
         dataSetLoc.setObjectName(dataSet.getType() + '/' + dataSet.getName() + '/');
+        if("local".equals(dataSet.getStatus())){
+            dataSetLoc.setBucketName("test");
+            dataSetMapper.insertLoc(dataSetLoc);
+            return true;
+        }
+        dataSetLoc.setBucketName("szbldb-test");
         dataSetMapper.insertLoc(dataSetLoc);
         //创建OSS目录
         String endpoint = "https://oss-cn-shenzhen.aliyuncs.com";
@@ -105,8 +124,6 @@ public class DataSetUploadService {
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, objectName, new ByteArrayInputStream(content.getBytes()));
             ossClient.putObject(putObjectRequest);
         }catch (OSSException oe) {
-            System.out.println("Caught an OSSException, which means your request made it to OSS, "
-                    + "but was rejected with an error response for some reason.");
             System.out.println("Error Message:" + oe.getErrorMessage());
             System.out.println("Error Code:" + oe.getErrorCode());
             System.out.println("Request ID:" + oe.getRequestId());
@@ -132,6 +149,105 @@ public class DataSetUploadService {
         dataSetMapper.insertFile(file);
         dataSetMapper.updateSize(file.getSize(), file.getDatasetId());
         return true;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public String uploadLocal(){
+        String url = null;
+        try(MinioClient client = MinioClient.builder()
+                .endpoint("http://" + ipAddress + ":9000")
+                .credentials("lqquan", "12345678")
+                .build()){
+            url = client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
+                    .method(Method.PUT)
+                    .bucket("test")
+                    .object("listmode数据/本地测试目录/StorageExplorer-windows-x64.exe")
+                    .expiry(2, TimeUnit.HOURS)
+                    .build());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return url;
+        /*Integer datasetId = part.getId();
+        DataSet dataSet = dataSetMapper.getDatasetById(datasetId);
+        if(dataSetMapper.checkFilename(part.getFileName(), datasetId) != null) {
+            throw new IOException("文件上传失败！");
+        }
+        if(part.getChunk() == -1){
+            MultipartFile file = part.getFile();
+            String name = file.getOriginalFilename();
+            Long size = file.getSize();
+            String type = file.getContentType();
+            File f = new File(datasetId, size, name, type);
+            f.setDate(LocalDate.now());
+            dataSetMapper.insertFile(f);
+            dataSetMapper.updateSize(size, datasetId);
+            String path = "D:/PETDatabase/" + dataSet.getType() + '/' + dataSet.getName() + '/' + name;
+            file.transferTo(new java.io.File(path));
+        }
+        else{
+            String dirPath = "D:/PETDatabase/" + dataSet.getType() + '/' + dataSet.getName() + '/' + part.getFileName() + "folder";
+            if(part.getChunk() == 0){
+                java.io.File d = new java.io.File(dirPath);
+                if(!d.mkdir()) throw new RuntimeException();
+                java.io.File f = new java.io.File(dirPath + '/' + part.getChunk());
+                part.getFile().transferTo(f);
+            }
+            else{
+                java.io.File f = new java.io.File(dirPath + '/' + part.getChunk());
+                if(f.exists()) throw new RuntimeException("分片已存在！");
+                part.getFile().transferTo(f);
+            }
+        }*/
+    }
+
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public List<Integer> verifyFile(FilePart part) throws IOException{
+        Integer datasetId = part.getId();
+        DataSet dataSet = dataSetMapper.getDatasetById(datasetId);
+        if(dataSetMapper.checkFilename(part.getFileName(), datasetId) != null) {
+            return List.of(-1);
+        }
+        String dirPath = "D:/PETDatabase/" + dataSet.getType() + '/' + dataSet.getName();
+        java.io.File finalF = new java.io.File("D:/PETDatabase/" + dataSet.getType()
+                + '/' + dataSet.getName() + '/' + part.getFileName());
+        List<Integer> lack = new ArrayList<>();
+        int count = part.getChunks();
+        for(int i = 0; i < count; i++){
+            java.io.File patch = new java.io.File(dirPath + '/' + part.getFileName() + "folder" + '/' + i);
+            if(!patch.exists()){
+                lack.add(i);
+            }
+        }
+        if(lack.isEmpty()){
+            //将每一个文件块的内容都追加到新文件中
+            try(FileOutputStream fos = new FileOutputStream(finalF)){
+                FileChannel out = fos.getChannel();
+                for(int i = 0; i < count; i++){
+                    java.io.File patch = new java.io.File(dirPath + '/' + part.getFileName() + "folder" + '/' + i);
+                    try (FileInputStream in = new FileInputStream(patch)) {
+                        FileChannel inc = in.getChannel();
+                        inc.transferTo(0, inc.size(), out);
+                    }
+                    //追加完成后，删除文件块
+                    Files.delete(patch.toPath());
+                }
+
+            }
+            Files.delete(new java.io.File(dirPath + '/' + part.getFileName() + "folder").toPath());
+        }
+        else return lack;
+        String md5 = DigestUtils.md5Hex(new FileInputStream(finalF));
+        System.out.println(md5);
+        if(!md5.equals(part.getMd5())){
+            Files.delete(finalF.toPath());
+            return lack;
+        }
+        File newF = new File(datasetId, finalF.length(), part.getFileName(), Files.probeContentType(finalF.toPath()));
+        newF.setDate(LocalDate.now());
+        dataSetMapper.insertFile(newF);
+        dataSetMapper.updateSize(finalF.length(), datasetId);
+        return null;
     }
 
 }

@@ -7,20 +7,30 @@ import com.aliyun.oss.common.auth.EnvironmentVariableCredentialsProvider;
 import com.aliyun.oss.model.GeneratePresignedUrlRequest;
 import com.szbldb.dao.DataSetMapper;
 import com.szbldb.pojo.datasetPojo.DataSetLoc;
+import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.MinioClient;
+import io.minio.http.Method;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
 public class DataDownloadService {
 
+    private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
+
     private final DataSetMapper dataSetMapper;
 
-    public DataDownloadService(@Autowired DataSetMapper dataSetMapper) {
+    public DataDownloadService(@Autowired DataSetMapper dataSetMapper) throws UnknownHostException {
         this.dataSetMapper = dataSetMapper;
     }
 
@@ -47,5 +57,30 @@ public class DataDownloadService {
             System.out.println("Caught a ClientException");
         }
         return null;
+    }
+
+    public String downloadLocal(Integer id){
+        DataSetLoc loc = dataSetMapper.searchLocByFileId(id);
+        String filename = dataSetMapper.getFileByFileId(id).getName();
+        if(loc == null) return null;
+        String url = null;
+        try(MinioClient client = MinioClient.builder()
+                .endpoint("http://" + ipAddress + ":9000")
+                .credentials("lqquan", "12345678")
+                .build()){
+            Map<String, String> reqParams = new HashMap<>();
+            reqParams.put("response-content-type", "application/x-msdownload");
+            url = client.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(loc.getBucketName())
+                            .object(loc.getObjectName() + filename)
+                            .expiry(2, TimeUnit.HOURS)
+                            .extraQueryParams(reqParams)
+                            .build());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return url;
     }
 }

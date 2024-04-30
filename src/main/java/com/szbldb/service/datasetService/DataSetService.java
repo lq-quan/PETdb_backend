@@ -60,7 +60,8 @@ public class DataSetService {
     public void deleteFile(Integer fileId) throws Exception{
         File deletedFile = dataSetMapper.getFileByFileId(fileId);
         dataSetMapper.deleteFile(fileId);
-        Integer size = deletedFile.getSize(), datasetId = deletedFile.getDatasetId();
+        Long size = deletedFile.getSize();
+        Integer datasetId = deletedFile.getDatasetId();
         dataSetMapper.updateSize(-size, datasetId);
         DataSet dataSet = dataSetMapper.getDatasetById(datasetId);
         String endpoint = "https://oss-cn-shenzhen.aliyuncs.com";

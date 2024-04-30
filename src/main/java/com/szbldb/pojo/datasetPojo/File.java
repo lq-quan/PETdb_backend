@@ -8,12 +8,12 @@ import java.time.LocalDate;
 public class File {
     private Integer id;
     private Integer datasetId;
-    private Integer size;
+    private Long size;
     private String name;
     private String type;
     private LocalDate date;
 
-    public File(Integer datasetId, Integer size, String name, String type) {
+    public File(Integer datasetId, Long size, String name, String type) {
         this.datasetId = datasetId;
         this.size = size;
         this.name = name;

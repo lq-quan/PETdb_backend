@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URL;
 
-
 @RestController
 public class DataDownloadController {
 
@@ -22,6 +21,14 @@ public class DataDownloadController {
     public Result dataDownload(Integer id) throws Exception{
         System.out.println("File id: " + id);
         URL url = dataDownloadService.dataDownload(id);
+        if(url == null)
+            return Result.error("Failed to get the file", 40009);
+        return Result.success(url);
+    }
+
+    @RequestMapping("/PETdatabase/dataset/downloadLocal")
+    public Result downloadLocal(Integer id) {
+        String url = dataDownloadService.downloadLocal(id);
         if(url == null)
             return Result.error("Failed to get the file", 40009);
         return Result.success(url);
