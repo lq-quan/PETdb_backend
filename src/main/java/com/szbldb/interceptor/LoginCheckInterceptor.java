@@ -3,6 +3,7 @@ package com.szbldb.interceptor;
 import com.alibaba.fastjson.JSONObject;
 import com.szbldb.dao.UserMapper;
 import com.szbldb.pojo.Result;
+import com.szbldb.service.logService.LogService;
 import com.szbldb.util.JWTHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,17 +16,20 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+
 @Component
 public class LoginCheckInterceptor implements HandlerInterceptor {
 
     private final UserMapper userMapper;
+    private final LogService logService;
 
-    public LoginCheckInterceptor(@Autowired UserMapper userMapper) {
+    public LoginCheckInterceptor(@Autowired UserMapper userMapper, @Autowired LogService logService) {
+        this.logService = logService;
         this.userMapper = userMapper;
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         String jwtUser = request.getHeader("token");
         System.out.println("interceptor: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + " " + jwtUser);
         if(!StringUtils.hasLength(jwtUser)){
@@ -43,6 +47,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
             response.getWriter().write(expired);
             return false;
         }
+        logService.setUser(JWTHelper.getUsername(jwtUser));
         return true;
     }
 }

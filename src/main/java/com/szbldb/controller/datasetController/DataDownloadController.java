@@ -3,10 +3,11 @@ package com.szbldb.controller.datasetController;
 import com.szbldb.pojo.Result;
 import com.szbldb.service.datasetService.DataDownloadService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URL;
+import java.util.List;
+
 
 @RestController
 public class DataDownloadController {
@@ -31,6 +32,15 @@ public class DataDownloadController {
         String url = dataDownloadService.downloadLocal(id);
         if(url == null)
             return Result.error("Failed to get the file", 40009);
+        return Result.success(url);
+    }
+
+    @RequestMapping("/PETdatabase/dataset/downloadZip")
+    public Result downloadZip(@RequestParam("files") List<Integer> files){
+        System.out.println(files);
+        String url = dataDownloadService.downloadLocalFiles(files);
+        if(url == null)
+            return Result.error("Failed to get the files", 40009);
         return Result.success(url);
     }
 }

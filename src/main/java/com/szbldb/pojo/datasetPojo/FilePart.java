@@ -5,26 +5,22 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class FilePart {
-    private MultipartFile file;
-    private String uid;
-    private Integer chunk;
+    private Integer chunkSize;
     private Integer id; //datasetId
-    private Integer chunks;
     private String fileName;
-    private Long fullSize;
-    private String md5;
+    private Long fileSize;
+    private String fileMd5;
+    private String contentType;
 
     @Override
     public String toString() {
         return "FilePart{" +
-                "file=" + file +
-                ", uid='" + uid + '\'' +
-                ", chunk=" + chunk +
+                "chunkSize=" + chunkSize +
                 ", id=" + id +
-                ", chunks=" + chunks +
                 ", fileName='" + fileName + '\'' +
-                ", fullSize=" + fullSize +
-                ", md5='" + md5 + '\'' +
+                ", fileSize=" + fileSize +
+                ", fileMd5='" + fileMd5 + '\'' +
+                ", contentType='" + contentType + '\'' +
                 '}';
     }
 }

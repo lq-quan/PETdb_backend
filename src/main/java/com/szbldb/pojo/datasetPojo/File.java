@@ -12,6 +12,7 @@ public class File {
     private String name;
     private String type;
     private LocalDate date;
+    private String md5;
 
     public File(Integer datasetId, Long size, String name, String type) {
         this.datasetId = datasetId;

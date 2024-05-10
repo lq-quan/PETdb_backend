@@ -9,13 +9,19 @@ import com.szbldb.pojo.datasetPojo.DataSet;
 import com.szbldb.pojo.datasetPojo.DataSetList;
 import com.szbldb.pojo.datasetPojo.DataSetLoc;
 import com.szbldb.pojo.datasetPojo.File;
+import com.szbldb.service.logService.LogService;
+import io.minio.MinioClient;
+import io.minio.RemoveObjectArgs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.aliyun.oss.common.auth.*;
 import com.aliyun.oss.model.*;
+
+import java.net.InetAddress;
 import java.net.URLDecoder;
 
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +31,12 @@ import java.util.List;
 public class DataSetService {
 
     private final DataSetMapper dataSetMapper;
+    private final LogService logService;
 
-    public DataSetService(@Autowired DataSetMapper dataSetMapper) {
+    private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
+
+    public DataSetService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService) throws UnknownHostException {
+        this.logService = logService;
         this.dataSetMapper = dataSetMapper;
     }
 
@@ -64,10 +74,26 @@ public class DataSetService {
         Integer datasetId = deletedFile.getDatasetId();
         dataSetMapper.updateSize(-size, datasetId);
         DataSet dataSet = dataSetMapper.getDatasetById(datasetId);
+        String objectName = dataSet.getType() + "/" + dataSet.getName() + "/" + deletedFile.getName();
+        if("local".equals(dataSet.getStatus())){
+            try(MinioClient client = MinioClient.builder()
+                    .endpoint("http://" + ipAddress + ":9000")
+                    .credentials("lqquan", "12345678")
+                    .build()){
+                client.removeObject(RemoveObjectArgs.builder()
+                        .bucket("test")
+                        .object(objectName)
+                        .build());
+            }catch (Exception e){
+                logService.addLog("失败：删除 " + dataSet.getName() + " 中的 " + deletedFile.getName());
+                throw e;
+            }
+            logService.addLog("成功：删除 " + dataSet.getName() + " 中的 " + deletedFile.getName());
+            return;
+        }
         String endpoint = "https://oss-cn-shenzhen.aliyuncs.com";
         EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
         String bucketName = "szbldb-test";
-        String objectName = dataSet.getType() + "/" + dataSet.getName() + "/" + deletedFile.getName();
         OSS ossClient = new OSSClientBuilder().build(endpoint, credentialsProvider);
         try {
             ossClient.deleteObject(bucketName, objectName);
@@ -89,14 +115,38 @@ public class DataSetService {
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteDataset(Integer id) throws Exception{
-        System.out.println(id);
-        String endPoint = "https://oss-cn-shenzhen.aliyuncs.com";
-        EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
-        String bucketName = "szbldb-test";
+        System.out.println("Deleted dataset: " + id);
+        DataSet dataSet = dataSetMapper.getDatasetById(id);
+
         DataSetLoc loc = dataSetMapper.searchLocByDatasetId(id);
+        Integer fileNums = dataSetMapper.getFileNums(id);
+        if(fileNums > 0){
+            logService.addLog("失败：删除数据集 " + dataSet.getName());
+            throw new RuntimeException("Dataset not empty!");
+        }
         dataSetMapper.deleteAllFilesOfDataset(id);
         dataSetMapper.deleteDatasetLoc(id);
         dataSetMapper.deleteDataset(id);
+        if("local".equals(dataSet.getStatus())){
+            try(MinioClient client = MinioClient.builder()
+                    .endpoint("http://" + ipAddress + ":9000")
+                    .credentials("lqquan", "12345678")
+                    .build()){
+                client.removeObject(RemoveObjectArgs.builder()
+                        .bucket("test")
+                        .object(loc.getObjectName())
+                        .build());
+            }catch (Exception e){
+                logService.addLog("失败：删除数据集 " + dataSet.getName());
+                throw e;
+            }
+            logService.addLog("成功：删除数据集 " + dataSet.getName());
+            return;
+        }
+
+        String endPoint = "https://oss-cn-shenzhen.aliyuncs.com";
+        EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+        String bucketName = "szbldb-test";
         // 待删除目录的完整路径，完整路径中不包含Bucket名称。
         final String prefix = loc.getObjectName();
 

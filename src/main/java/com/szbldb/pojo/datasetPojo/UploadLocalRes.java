@@ -8,9 +8,8 @@ import java.util.List;
 public class UploadLocalRes {
     private Integer status;
     private List<Integer> error_file;
-
-    public UploadLocalRes(Integer status, List<Integer> error_file) {
-        this.status = status;
-        this.error_file = error_file;
-    }
+    private List<String> chunkUploadedList;
+    private String url;
+    private List<Integer> uploadedList;
+    private boolean success;
 }

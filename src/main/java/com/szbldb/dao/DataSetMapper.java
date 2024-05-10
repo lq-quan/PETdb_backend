@@ -42,7 +42,7 @@ public interface DataSetMapper {
     @Insert("insert into dataset_loc (id, bucketname, objectname) value (#{id}, #{bucketName}, #{objectName})")
     void insertLoc(DataSetLoc dataSetLoc);
 
-    @Insert("insert into files (datasetId, name, type, date, size) value (#{datasetId}, #{name}, #{type}, #{date}, #{size})")
+    @Insert("insert into files (datasetId, name, type, date, size, md5) value (#{datasetId}, #{name}, #{type}, #{date}, #{size}, #{md5})")
     void insertFile(File file);
 
     @Update("update dataset set size = size + #{fileSize} where id = #{id}")
@@ -51,14 +51,22 @@ public interface DataSetMapper {
     @Select("select * from files where datasetId = #{datasetId}")
     List<File> getFilesByDatasetId(Integer datasetId);
 
+
     @Select("select * from dataset inner join files f on dataset.id = f.datasetId and f.id = #{id}")
     DataSet getDatasetByFileId(Integer id);
+
+    @Select("select count(*) from files where datasetId = #{datasetId}")
+    Integer getFileNums(Integer datasetId);
 
     @Select("select * from files where id = #{id}")
     File getFileByFileId(Integer id);
 
     @Select("select * from files where name = #{filename} and datasetId = #{dataSetId}")
     File checkFilename(String filename, Integer dataSetId);
+
+    @Select("select * from files where md5 = #{md5} limit 1")
+    File checkAndGetMd5(String md5);
+
 
     @Delete("delete from files where id = #{fileId}")
     void deleteFile(Integer fileId);
@@ -71,4 +79,5 @@ public interface DataSetMapper {
 
     @Delete("delete from dataset where id = #{id}")
     void deleteDataset(Integer id);
+
 }

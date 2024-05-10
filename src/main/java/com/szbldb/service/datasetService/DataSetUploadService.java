@@ -15,25 +15,24 @@ import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
 import com.szbldb.dao.DataSetMapper;
 import com.szbldb.pojo.datasetPojo.*;
-import io.minio.GetPresignedObjectUrlArgs;
-import io.minio.MinioClient;
+import com.szbldb.pojo.datasetPojo.File;
+import com.szbldb.pojo.logPojo.Operation;
+import com.szbldb.service.logService.LogService;
+import io.minio.*;
+import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -41,10 +40,12 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class DataSetUploadService {
     private final DataSetMapper dataSetMapper;
+    private final LogService logService;
 
     private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
 
-    public DataSetUploadService(@Autowired DataSetMapper dataSetMapper) throws UnknownHostException {
+    public DataSetUploadService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService) throws UnknownHostException {
+        this.logService = logService;
         this.dataSetMapper = dataSetMapper;
     }
 
@@ -152,102 +153,156 @@ public class DataSetUploadService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public String uploadLocal(){
-        String url = null;
+    public Boolean checkMd5(List<Integer> uploaded, FilePart part){
+        String md5 = part.getFileMd5();
+        File origin = dataSetMapper.checkAndGetMd5(md5);
+        DataSet toDataset = dataSetMapper.getDatasetById(part.getId());
+        if(dataSetMapper.checkFilename(part.getFileName(), part.getId()) != null) return null;
+        //尝试寻找分片
+        int flag = 0;
+        if(origin == null){
+            String object = toDataset.getType() + "/" + toDataset.getName() + "/" + part.getFileMd5();
+            try(MinioClient client = MinioClient.builder()
+                    .endpoint("http://" + ipAddress + ":9000")
+                    .credentials("lqquan", "12345678")
+                    .build()){
+                int i = 0;
+                while(true){
+                    try{
+                        client.statObject(StatObjectArgs.builder().bucket("test").object(object + "." + i).build());
+                        uploaded.add(i++);
+                    }catch (ErrorResponseException ee){
+                        if(flag++ == 2) break;
+                    }
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return false;
+        }
+        else{
+            DataSet dataSet = dataSetMapper.getDatasetById(origin.getDatasetId());
+            String toObject = toDataset.getType() + "/" + toDataset.getName() + "/" + part.getFileName();
+            String originFileObject = dataSet.getType() + "/" + dataSet.getName() + "/" + origin.getName();
+            try(MinioClient client = MinioClient.builder()
+                    .endpoint("http://" + ipAddress + ":9000")
+                    .credentials("lqquan", "12345678")
+                    .build()){
+                client.copyObject(CopyObjectArgs.builder()
+                        .bucket("test")
+                        .object(toObject)
+                        .source(
+                                CopySource.builder()
+                                        .bucket("test")
+                                        .object(originFileObject)
+                                        .build()
+                        ).build());
+            }catch (Exception e){
+                e.printStackTrace();
+                return null;
+            }
+        }
+        origin.setDatasetId(part.getId());
+        uploadFile(origin);
+        logService.addLog("成功：向 " + toDataset.getName() + " 上传 " + part.getFileName());
+        return true;
+    }
+
+    //@Transactional(rollbackFor = Exception.class)
+    public List<String> uploadLocal(FilePart part){
+        System.out.println(part);
+        List<String> list = new ArrayList<>();
+        DataSet dataSet = dataSetMapper.getDatasetById(part.getId());
+        String object = dataSet.getType() + "/" + dataSet.getName() + "/" + part.getFileMd5();
         try(MinioClient client = MinioClient.builder()
                 .endpoint("http://" + ipAddress + ":9000")
                 .credentials("lqquan", "12345678")
                 .build()){
-            url = client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
-                    .method(Method.PUT)
-                    .bucket("test")
-                    .object("listmode数据/本地测试目录/StorageExplorer-windows-x64.exe")
-                    .expiry(2, TimeUnit.HOURS)
-                    .build());
+            long chunkCount = part.getFileSize() / part.getChunkSize() + 1;
+            if(part.getFileSize() % part.getChunkSize() == 0) chunkCount--;
+            for(int i = 0; i < chunkCount; i++){
+                try{
+                    client.statObject(StatObjectArgs.builder().bucket("test").object(object + "." + i).build());
+                }catch (ErrorResponseException e){
+                    String urlI = client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
+                            .method(Method.PUT)
+                            .bucket("test")
+                            .object(object + "." + i)
+                            .expiry(1, TimeUnit.HOURS)
+                            .build());
+                    list.add(urlI);
+                }
+            }
         }catch (Exception e){
             e.printStackTrace();
         }
-        return url;
-        /*Integer datasetId = part.getId();
-        DataSet dataSet = dataSetMapper.getDatasetById(datasetId);
-        if(dataSetMapper.checkFilename(part.getFileName(), datasetId) != null) {
-            throw new IOException("文件上传失败！");
-        }
-        if(part.getChunk() == -1){
-            MultipartFile file = part.getFile();
-            String name = file.getOriginalFilename();
-            Long size = file.getSize();
-            String type = file.getContentType();
-            File f = new File(datasetId, size, name, type);
-            f.setDate(LocalDate.now());
-            dataSetMapper.insertFile(f);
-            dataSetMapper.updateSize(size, datasetId);
-            String path = "D:/PETDatabase/" + dataSet.getType() + '/' + dataSet.getName() + '/' + name;
-            file.transferTo(new java.io.File(path));
-        }
-        else{
-            String dirPath = "D:/PETDatabase/" + dataSet.getType() + '/' + dataSet.getName() + '/' + part.getFileName() + "folder";
-            if(part.getChunk() == 0){
-                java.io.File d = new java.io.File(dirPath);
-                if(!d.mkdir()) throw new RuntimeException();
-                java.io.File f = new java.io.File(dirPath + '/' + part.getChunk());
-                part.getFile().transferTo(f);
-            }
-            else{
-                java.io.File f = new java.io.File(dirPath + '/' + part.getChunk());
-                if(f.exists()) throw new RuntimeException("分片已存在！");
-                part.getFile().transferTo(f);
-            }
-        }*/
+        return list;
     }
 
-    @Transactional(isolation = Isolation.SERIALIZABLE)
-    public List<Integer> verifyFile(FilePart part) throws IOException{
-        Integer datasetId = part.getId();
-        DataSet dataSet = dataSetMapper.getDatasetById(datasetId);
-        if(dataSetMapper.checkFilename(part.getFileName(), datasetId) != null) {
-            return List.of(-1);
-        }
-        String dirPath = "D:/PETDatabase/" + dataSet.getType() + '/' + dataSet.getName();
-        java.io.File finalF = new java.io.File("D:/PETDatabase/" + dataSet.getType()
-                + '/' + dataSet.getName() + '/' + part.getFileName());
-        List<Integer> lack = new ArrayList<>();
-        int count = part.getChunks();
-        for(int i = 0; i < count; i++){
-            java.io.File patch = new java.io.File(dirPath + '/' + part.getFileName() + "folder" + '/' + i);
-            if(!patch.exists()){
-                lack.add(i);
-            }
-        }
-        if(lack.isEmpty()){
-            //将每一个文件块的内容都追加到新文件中
-            try(FileOutputStream fos = new FileOutputStream(finalF)){
-                FileChannel out = fos.getChannel();
-                for(int i = 0; i < count; i++){
-                    java.io.File patch = new java.io.File(dirPath + '/' + part.getFileName() + "folder" + '/' + i);
-                    try (FileInputStream in = new FileInputStream(patch)) {
-                        FileChannel inc = in.getChannel();
-                        inc.transferTo(0, inc.size(), out);
-                    }
-                    //追加完成后，删除文件块
-                    Files.delete(patch.toPath());
+    @Async
+    @Transactional(rollbackFor = Exception.class)
+    public void mergeFile(FilePart part){
+        DataSet dataSet = dataSetMapper.getDatasetById(part.getId());
+        String object = dataSet.getType() + "/" + dataSet.getName() + "/" + part.getFileMd5();
+        String type, md5;
+        long size;
+        try(MinioClient client = MinioClient.builder()
+                .endpoint("http://" + ipAddress + ":9000")
+                .credentials("lqquan", "12345678")
+                .build()){
+            List<ComposeSource> sources = new ArrayList<>();
+            int i = 0;
+            while(true){
+                try{
+                    client.statObject(StatObjectArgs.builder().bucket("test").object(object + "." + i).build());
+                    sources.add(ComposeSource.builder().bucket("test").object(object + "." + i).build());
+                }catch (ErrorResponseException e){
+                    break;
                 }
-
+                i++;
             }
-            Files.delete(new java.io.File(dirPath + '/' + part.getFileName() + "folder").toPath());
+            client.composeObject(ComposeObjectArgs.builder()
+                    .bucket("test")
+                    .object(dataSet.getType() + "/" + dataSet.getName() + "/" + part.getFileName())
+                    .sources(sources)
+                    .build());
+            while(--i >= 0){
+                client.removeObject(RemoveObjectArgs.builder()
+                        .bucket("test")
+                        .object(object + "." + i)
+                        .build());
+            }
+            object = dataSet.getType() + "/" + dataSet.getName() + "/" + part.getFileName();
+            try(InputStream input = client.getObject(GetObjectArgs.builder().bucket("test").object(object).build())){
+                md5 = DigestUtils.md5Hex(input);
+                if(!md5.equals(part.getFileMd5())){
+                    client.removeObject(RemoveObjectArgs.builder()
+                            .bucket("test")
+                            .object(object)
+                            .build());
+                    throw new RuntimeException("Md5对比失败");
+                }
+            }
+            StatObjectResponse args = client.statObject(StatObjectArgs.builder().bucket("test").object(object).build());
+            size = args.size();
+            type = args.contentType();
+        }catch (Exception e){
+            logService.addLog("失败：向 " + dataSet.getName() + " 上传 " + part.getFileName());
+            e.printStackTrace();
+            return;
         }
-        else return lack;
-        String md5 = DigestUtils.md5Hex(new FileInputStream(finalF));
-        System.out.println(md5);
-        if(!md5.equals(part.getMd5())){
-            Files.delete(finalF.toPath());
-            return lack;
+        File file = new File(part.getId(), size, part.getFileName(), type);
+        file.setMd5(md5);
+        while(true){
+            try{
+                uploadFile(file);
+                logService.addLog("成功：向 " + dataSet.getName() + " 上传 " + part.getFileName());
+                return;
+            }catch (PessimisticLockingFailureException pe){
+                System.out.println("Caught deadlock!");
+            }
         }
-        File newF = new File(datasetId, finalF.length(), part.getFileName(), Files.probeContentType(finalF.toPath()));
-        newF.setDate(LocalDate.now());
-        dataSetMapper.insertFile(newF);
-        dataSetMapper.updateSize(finalF.length(), datasetId);
-        return null;
     }
+
 
 }

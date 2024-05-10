@@ -44,7 +44,11 @@ public class DataSetController {
 
     @RequestMapping("/PETdatabase/dataset/delete")
     public Result deleteDataset(Integer id) throws Exception{
-        dataSetService.deleteDataset(id);
+        try{
+            dataSetService.deleteDataset(id);
+        }catch (RuntimeException e){
+            return Result.error("failed to delete. The dataset might not be empty", 40009);
+        }
         return Result.success();
     }
 }
