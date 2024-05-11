@@ -11,10 +11,11 @@ import com.szbldb.pojo.datasetPojo.DataSetLoc;
 import com.szbldb.pojo.datasetPojo.File;
 import com.szbldb.service.logService.LogService;
 import io.minio.*;
-import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,7 +70,7 @@ public class DataDownloadService {
     public String downloadLocal(Integer id){
         DataSetLoc loc = dataSetMapper.searchLocByFileId(id);
         String filename = dataSetMapper.getFileByFileId(id).getName();
-        DataSet dataSet = dataSetMapper.getDatasetById(id);
+        DataSet dataSet = dataSetMapper.getDatasetByFileId(id);
         if(loc == null) return null;
         String url = null;
         try(MinioClient client = MinioClient.builder()
@@ -94,38 +95,81 @@ public class DataDownloadService {
         return url;
     }
 
-    public String downloadLocalFiles(List<Integer> fileIDs){
+    @Transactional(rollbackFor = Exception.class)
+    public String getZipUrl(List<Integer> fileIDs){
         if(fileIDs.isEmpty()) return null;
         else if(fileIDs.size() == 1) return downloadLocal(fileIDs.get(0));
-        String zipName = DigestUtils.md5Hex(fileIDs.toString()) + ".zip";
-        List<InputStream> streams = new ArrayList<>();
         DataSet dataSet = dataSetMapper.getDatasetByFileId(fileIDs.get(0));
-        DataSetLoc loc = dataSetMapper.searchLocByDatasetId(dataSet.getId());
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        String url;
-        try(MinioClient client = MinioClient.builder()
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("lqquan", "12345678")
-                .build(); ZipOutputStream zipOut = new ZipOutputStream(baos)){
-            Map<String, String> reqParams = new HashMap<>();
-            reqParams.put("response-content-type", "application/x-msdownload");
-            try{
-                client.statObject(StatObjectArgs.builder()
-                        .bucket("test")
-                        .object("zip/" + zipName)
-                        .build());
-                url = client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
+        try{
+            for(Integer id : fileIDs){
+                if(dataSetMapper.getDatasetByFileId(id).getId() - dataSet.getId() != 0) return "false";
+            }
+        }catch (NullPointerException npe){
+            return "false";
+        }
+        String md5 = DigestUtils.md5Hex(fileIDs.toString());
+        String zipName = md5 + ".zip";
+        String status = dataSetMapper.checkZipStatus(md5);
+        if(status == null){
+            return "null";
+        }
+        if("created".equals(status)) return null;
+        else if("failed".equals(status)){
+            logService.addLog("失败：下载 " + dataSet.getName() + " 中部分文件");
+            dataSetMapper.deleteZipStatus(md5);
+            return "false";
+        }
+        else{
+            try(MinioClient client = MinioClient.builder()
+                    .endpoint("http://" + ipAddress + ":9000")
+                    .credentials("lqquan", "12345678")
+                    .build()){
+                Map<String, String> reqParams = new HashMap<>();
+                reqParams.put("response-content-type", "application/x-msdownload");
+                String url = client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                         .method(Method.GET)
                         .bucket("test")
                         .object("zip/" + zipName)
                         .expiry(2, TimeUnit.HOURS)
                         .extraQueryParams(reqParams)
                         .build());
-                logService.addLog("成功：获取 " + dataSet.getName() + " 中已存在zip文件的下载链接");
+                logService.addLog("成功：获取 " + dataSet.getName() + " 中部分文件的下载链接");
                 return url;
-            }catch (ErrorResponseException ere){
-                logService.addLog("消息：即将创建新的zip文件，请及时清理");
+            }catch (Exception e){
+                logService.addLog("失败：下载 " + dataSet.getName() + " 中部分文件");
+                return "false";
             }
+        }
+    }
+
+    @Async
+    @Transactional(rollbackFor = Exception.class)
+    public void createZip(List<Integer> fileIDs){
+        if(fileIDs.isEmpty() || fileIDs.size() == 1) return;
+        DataSet dataSet = dataSetMapper.getDatasetByFileId(fileIDs.get(0));
+        String md5 = DigestUtils.md5Hex(fileIDs.toString());
+        String zipName = md5 + ".zip";
+        try{
+            dataSetMapper.insertZipStatus(md5, "created");
+        }catch (Exception e){
+            while(true){
+                try{
+                    dataSetMapper.updateZipStatus(md5, "created");
+                    break;
+                }catch (PessimisticLockingFailureException pfe){
+                    System.out.println("Caught deadlock!");
+                }
+            }
+        }
+        List<InputStream> streams = new ArrayList<>();
+        DataSetLoc loc = dataSetMapper.searchLocByDatasetId(dataSet.getId());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try(MinioClient client = MinioClient.builder()
+                .endpoint("http://" + ipAddress + ":9000")
+                .credentials("lqquan", "12345678")
+                .build(); ZipOutputStream zipOut = new ZipOutputStream(baos)){
+            Map<String, String> reqParams = new HashMap<>();
+            reqParams.put("response-content-type", "application/x-msdownload");
             String[] names = new String[fileIDs.size()];
             int i = 0;
             for(Integer fileId : fileIDs){
@@ -150,20 +194,11 @@ public class DataDownloadService {
                     .stream(zip, -1, 10485760)
                     .contentType("application/zip")
                     .build());
-            url = client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
-                    .method(Method.GET)
-                    .bucket("test")
-                    .object("zip/" + zipName)
-                    .expiry(2, TimeUnit.HOURS)
-                    .extraQueryParams(reqParams)
-                    .build());
-            logService.addLog("成功：获取 " + dataSet.getName() + " 中部分文件的下载链接");
-            return url;
         }catch (Exception e){
             e.printStackTrace();
-            logService.addLog("失败：下载 " + dataSet.getName() + " 中部分文件");
-            return null;
+            dataSetMapper.updateZipStatus(md5, "failed");
         }
+        dataSetMapper.updateZipStatus(md5, "success");
     }
 
     private void copyStream(InputStream input, OutputStream output) throws IOException {

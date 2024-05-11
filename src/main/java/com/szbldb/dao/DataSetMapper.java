@@ -67,6 +67,17 @@ public interface DataSetMapper {
     @Select("select * from files where md5 = #{md5} limit 1")
     File checkAndGetMd5(String md5);
 
+    @Insert("insert into zipstatus (md5, status) value (#{md5}, #{status})")
+    void insertZipStatus(String md5, String status);
+
+    @Select("select status from zipstatus where md5 = #{md5}")
+    String checkZipStatus(String md5);
+
+    @Update("update zipstatus set status = #{status} where md5 = #{md5}")
+    void updateZipStatus(String md5, String status);
+
+    @Delete("delete from zipstatus where md5 = #{md5}")
+    void deleteZipStatus(String md5);
 
     @Delete("delete from files where id = #{fileId}")
     void deleteFile(Integer fileId);

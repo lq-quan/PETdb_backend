@@ -38,9 +38,18 @@ public class DataDownloadController {
     @RequestMapping("/PETdatabase/dataset/downloadZip")
     public Result downloadZip(@RequestParam("files") List<Integer> files){
         System.out.println(files);
-        String url = dataDownloadService.downloadLocalFiles(files);
-        if(url == null)
+        if(files.isEmpty()) return Result.success();
+        String url = dataDownloadService.getZipUrl(files);
+        if(url == null){
+            return Result.success("Creating zip file, please wait");
+        }
+        else if("null".equals(url)){
+            dataDownloadService.createZip(files);
+            return Result.success("Creating zip file, please wait");
+        }
+        else if("false".equals(url)){
             return Result.error("Failed to get the files", 40009);
-        return Result.success(url);
+        }
+        else return Result.success(url);
     }
 }
