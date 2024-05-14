@@ -47,6 +47,7 @@ public class DataSetController {
         try{
             dataSetService.deleteDataset(id);
         }catch (RuntimeException e){
+            e.printStackTrace();
             return Result.error("failed to delete. The dataset might not be empty", 40009);
         }
         return Result.success();

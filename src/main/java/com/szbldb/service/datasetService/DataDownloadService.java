@@ -2,6 +2,7 @@ package com.szbldb.service.datasetService;
 
 
 import com.aliyun.oss.*;
+import com.aliyun.oss.HttpMethod;
 import com.aliyun.oss.common.auth.CredentialsProviderFactory;
 import com.aliyun.oss.common.auth.EnvironmentVariableCredentialsProvider;
 import com.aliyun.oss.model.GeneratePresignedUrlRequest;
@@ -14,10 +15,11 @@ import io.minio.*;
 import io.minio.http.Method;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.PessimisticLockingFailureException;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
 
 import java.io.*;
 import java.net.InetAddress;
@@ -96,80 +98,16 @@ public class DataDownloadService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public String getZipUrl(List<Integer> fileIDs){
-        if(fileIDs.isEmpty()) return null;
-        else if(fileIDs.size() == 1) return downloadLocal(fileIDs.get(0));
-        DataSet dataSet = dataSetMapper.getDatasetByFileId(fileIDs.get(0));
-        try{
-            for(Integer id : fileIDs){
-                if(dataSetMapper.getDatasetByFileId(id).getId() - dataSet.getId() != 0) return "false";
-            }
-        }catch (NullPointerException npe){
-            return "false";
-        }
-        String md5 = DigestUtils.md5Hex(fileIDs.toString());
-        String zipName = md5 + ".zip";
-        String status = dataSetMapper.checkZipStatus(md5);
-        if(status == null){
-            return "null";
-        }
-        if("created".equals(status)) return null;
-        else if("failed".equals(status)){
-            logService.addLog("失败：下载 " + dataSet.getName() + " 中部分文件");
-            dataSetMapper.deleteZipStatus(md5);
-            return "false";
-        }
-        else{
-            try(MinioClient client = MinioClient.builder()
-                    .endpoint("http://" + ipAddress + ":9000")
-                    .credentials("lqquan", "12345678")
-                    .build()){
-                Map<String, String> reqParams = new HashMap<>();
-                reqParams.put("response-content-type", "application/x-msdownload");
-                String url = client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
-                        .method(Method.GET)
-                        .bucket("test")
-                        .object("zip/" + zipName)
-                        .expiry(2, TimeUnit.HOURS)
-                        .extraQueryParams(reqParams)
-                        .build());
-                logService.addLog("成功：获取 " + dataSet.getName() + " 中部分文件的下载链接");
-                return url;
-            }catch (Exception e){
-                logService.addLog("失败：下载 " + dataSet.getName() + " 中部分文件");
-                return "false";
-            }
-        }
-    }
-
-    @Async
-    @Transactional(rollbackFor = Exception.class)
-    public void createZip(List<Integer> fileIDs){
-        if(fileIDs.isEmpty() || fileIDs.size() == 1) return;
+    public ResponseEntity<StreamingResponseBody> createZip(List<Integer> fileIDs){
         DataSet dataSet = dataSetMapper.getDatasetByFileId(fileIDs.get(0));
         String md5 = DigestUtils.md5Hex(fileIDs.toString());
         String zipName = md5 + ".zip";
-        try{
-            dataSetMapper.insertZipStatus(md5, "created");
-        }catch (Exception e){
-            while(true){
-                try{
-                    dataSetMapper.updateZipStatus(md5, "created");
-                    break;
-                }catch (PessimisticLockingFailureException pfe){
-                    System.out.println("Caught deadlock!");
-                }
-            }
-        }
         List<InputStream> streams = new ArrayList<>();
         DataSetLoc loc = dataSetMapper.searchLocByDatasetId(dataSet.getId());
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try(MinioClient client = MinioClient.builder()
                 .endpoint("http://" + ipAddress + ":9000")
                 .credentials("lqquan", "12345678")
-                .build(); ZipOutputStream zipOut = new ZipOutputStream(baos)){
-            Map<String, String> reqParams = new HashMap<>();
-            reqParams.put("response-content-type", "application/x-msdownload");
+                .build()){
             String[] names = new String[fileIDs.size()];
             int i = 0;
             for(Integer fileId : fileIDs){
@@ -182,30 +120,29 @@ public class DataDownloadService {
                 streams.add(stream);
                 i++;
             }
-            for(i = 0; i < streams.size(); i++){
-                zipOut.putNextEntry(new ZipEntry(names[i]));
-                copyStream(streams.get(i), zipOut);
-                zipOut.closeEntry();
-            }
-            InputStream zip = new ByteArrayInputStream(baos.toByteArray());
-            client.putObject(PutObjectArgs.builder()
-                    .bucket("test")
-                    .object("zip/" + zipName)
-                    .stream(zip, -1, 10485760)
-                    .contentType("application/zip")
-                    .build());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDisposition(ContentDisposition.attachment().filename(zipName).build());
+            StreamingResponseBody streamingResponseBody = outputStream -> {
+                try (outputStream; ZipOutputStream zipOut = new ZipOutputStream(outputStream)) {
+                    int idx = 0;
+                    for (InputStream input : streams) {
+                        ZipEntry entry = new ZipEntry(names[idx++]);
+                        zipOut.putNextEntry(entry);
+                        byte[] buffer = new byte[1024];
+                        int len;
+                        while ((len = input.read(buffer)) > 0) {
+                            zipOut.write(buffer, 0, len);
+                        }
+                        zipOut.closeEntry();
+                        input.close();
+                    }
+                }
+            };
+            return ResponseEntity.ok().headers(headers).body(streamingResponseBody);
         }catch (Exception e){
             e.printStackTrace();
-            dataSetMapper.updateZipStatus(md5, "failed");
-        }
-        dataSetMapper.updateZipStatus(md5, "success");
-    }
-
-    private void copyStream(InputStream input, OutputStream output) throws IOException {
-        byte[] buffer = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = input.read(buffer)) != -1) {
-            output.write(buffer, 0, bytesRead);
+            return ResponseEntity.noContent().build();
         }
     }
 }
