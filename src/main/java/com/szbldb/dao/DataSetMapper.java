@@ -51,6 +51,8 @@ public interface DataSetMapper {
     @Select("select * from files where datasetId = #{datasetId}")
     List<File> getFilesByDatasetId(Integer datasetId);
 
+    @Update("update dataset set downloads = downloads + 1 where id = #{id}")
+    void updateDownloads(Integer id);
 
     @Select("select * from dataset inner join files f on dataset.id = f.datasetId and f.id = #{id}")
     DataSet getDatasetByFileId(Integer id);

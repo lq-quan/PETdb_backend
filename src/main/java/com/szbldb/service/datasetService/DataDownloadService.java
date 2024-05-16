@@ -69,6 +69,7 @@ public class DataDownloadService {
         return null;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public String downloadLocal(Integer id){
         DataSetLoc loc = dataSetMapper.searchLocByFileId(id);
         String filename = dataSetMapper.getFileByFileId(id).getName();
@@ -93,6 +94,7 @@ public class DataDownloadService {
             logService.addLog("失败：获取 " + dataSet.getName() + " 中文件 " + filename + " 的下载链接");
             e.printStackTrace();
         }
+        dataSetMapper.updateDownloads(dataSet.getId());
         logService.addLog("成功：获取 " + dataSet.getName() + " 中文件 " + filename + " 的下载链接");
         return url;
     }
@@ -139,6 +141,7 @@ public class DataDownloadService {
                     }
                 }
             };
+            dataSetMapper.updateDownloads(dataSet.getId());
             return ResponseEntity.ok().headers(headers).body(streamingResponseBody);
         }catch (Exception e){
             e.printStackTrace();

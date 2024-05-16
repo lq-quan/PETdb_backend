@@ -87,6 +87,10 @@ public class RegisterService {
         return true;
     }
 
+    public User getIdByUsername(String username){
+        return userMapper.getUserByUsername(username);
+    }
+
     public String digestMD5(String code){
         MessageDigest md;
         try{

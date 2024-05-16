@@ -18,12 +18,16 @@ public class AdminLicenseService {
         this.licenseMapper = licenseMapper;
     }
 
-    public SubmissionList searchSubmissions(String word, Integer page, Integer limit){
-        List<Submission> list = licenseMapper.searchSubmissions(word, (page - 1) * limit, limit);
+    public SubmissionList searchSubmissions(String name, String status, Integer page, Integer limit){
+        List<Submission> list = licenseMapper.searchSubmissions(name, status, (page - 1) * limit, limit);
         SubmissionList submissionList = new SubmissionList();
         submissionList.setItems(list);
         submissionList.setTotal(list.size());
         return submissionList;
+    }
+
+    public Submission getSubmissionDetail(Integer sid){
+        return licenseMapper.checkApplication(sid);
     }
 
     @Transactional(rollbackFor = Exception.class)

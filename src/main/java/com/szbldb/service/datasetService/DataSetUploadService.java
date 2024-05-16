@@ -107,6 +107,7 @@ public class DataSetUploadService {
         if("local".equals(dataSet.getStatus())){
             dataSetLoc.setBucketName("test");
             dataSetMapper.insertLoc(dataSetLoc);
+            logService.addLog("成功：创建数据集 " + dataSet.getName());
             return true;
         }
         dataSetLoc.setBucketName("szbldb-test");

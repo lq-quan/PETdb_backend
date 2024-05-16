@@ -12,14 +12,22 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+
+    private final LoginCheckInterceptor loginCheckInterceptor;
+
+    private final AdminCheckInterceptor adminCheckInterceptor;
+
     @Autowired
-    private LoginCheckInterceptor loginCheckInterceptor;
-    @Autowired
-    private AdminCheckInterceptor adminCheckInterceptor;
+    public WebConfig(LoginCheckInterceptor loginCheckInterceptor, AdminCheckInterceptor adminCheckInterceptor){
+        this.loginCheckInterceptor = loginCheckInterceptor;
+        this.adminCheckInterceptor = adminCheckInterceptor;
+    }
+
     @Override
     public void addInterceptors(InterceptorRegistry registry){
         registry.addInterceptor(loginCheckInterceptor).addPathPatterns("/**")
                 .excludePathPatterns(List.of("/PETdatabase/user/login/**", "/PETdatabase/register/**"));
-        registry.addInterceptor(adminCheckInterceptor).addPathPatterns("/PETdatabase/dataset/license/admin/**");
+        registry.addInterceptor(adminCheckInterceptor).addPathPatterns("/PETdatabase/dataset/license/admin/**")
+                .addPathPatterns("/PETdatabase/extended/admin/**");
     }
 }

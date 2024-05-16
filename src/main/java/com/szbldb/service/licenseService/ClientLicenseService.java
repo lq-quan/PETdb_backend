@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Date;
 
 @Service
 public class ClientLicenseService {
@@ -17,10 +18,20 @@ public class ClientLicenseService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void createApplication(Submission submission, String username){
+    public boolean createApplication(Submission submission, String username){
+        if(licenseMapper.getSid(username) != null) return false;
         submission.setDate(LocalDate.now());
         licenseMapper.createApplication(submission);
         licenseMapper.appendUserAppl(username, submission.getId());
+        return true;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateApplication(Submission submission, String username){
+        if(licenseMapper.getSid(username) == null) return false;
+        submission.setDate(LocalDate.now());
+        licenseMapper.updateApplicationByUsername(submission, username);
+        return true;
     }
 
     public Submission checkApplicationBySid(Integer sid){
@@ -36,7 +47,19 @@ public class ClientLicenseService {
     public Submission getStatusByUsername(String username){
         String status = licenseMapper.getStatusByUsername(username);
         Submission submission = new Submission();
+        if(status == null){
+            status = "none";
+        }
         submission.setStatus(status);
         return submission;
+    }
+
+    public boolean checkIfVerified(Integer id){
+        return licenseMapper.checkIfVerified(id) > 0;
+    }
+
+    public void insertValidEmail(Integer id, String email){
+        Date date = new Date(System.currentTimeMillis() + 24 * 3600 * 1000L);
+        licenseMapper.insertValidEmail(id, email, date);
     }
 }

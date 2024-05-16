@@ -19,18 +19,23 @@ public class AdminLicenseController {
     }
 
     @RequestMapping("/PETdatabase/dataset/license/admin/get")
-    public Result searchSubmission(String word, Integer page, Integer limit){
-        SubmissionList submissionList = adminLicenseService.searchSubmissions(word, page, limit);
+    public Result searchSubmission(String name, String status, Integer page, Integer limit){
+        SubmissionList submissionList = adminLicenseService.searchSubmissions(name, status, page, limit);
         return Result.success(submissionList);
     }
 
     @PostMapping("/PETdatabase/dataset/license/admin/approve")
     public Result auditSubmission(@RequestHeader String token, @RequestBody Map<String, Object> map) {
         String status = (String) map.get("status"), reason = (String)map.get("reason");
-        Integer id = (Integer)map.get("id");
+        Integer sid = (Integer)map.get("id");
         //System.out.println(id + " " + status);
         String username = JWTHelper.getUsername(token);
-        adminLicenseService.auditSubmission(id, username, status, reason);
+        adminLicenseService.auditSubmission(sid, username, status, reason);
         return Result.success();
+    }
+
+    @RequestMapping("/PETdatabase/dataset/license/admin/detail")
+    public Result checkSubmissionDetail(Integer id){
+        return Result.success(adminLicenseService.getSubmissionDetail(id));
     }
 }

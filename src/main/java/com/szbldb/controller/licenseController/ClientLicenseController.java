@@ -34,21 +34,30 @@ public class ClientLicenseController {
     public Result applicationSubmit(@RequestBody Submission submission, @RequestHeader String token){
         //System.out.println(submission);
         String username = JWTHelper.getUsername(token);
-        clientLicenseService.createApplication(submission, username);
-        return Result.success();
+        Integer id = registerService.getIdByUsername(username).getId();
+        if(!clientLicenseService.checkIfVerified(id)){
+            return Result.error("Email validation failed or expired!", 52004);
+        }
+        if(clientLicenseService.createApplication(submission, username))
+            return Result.success();
+        else return Result.error("Application already exists!", 52003);
     }
 
     @RequestMapping("/PETdatabase/dataset/license/detail")
-    public Result checkSubmission(@RequestHeader String token, Integer id){
-        if(id != null){
-            Submission submission = clientLicenseService.checkApplicationBySid(id);
-            return Result.success(submission);
+    public Result checkSubmission(@RequestHeader String token){
+        String username = JWTHelper.getUsername(token);
+        Submission submission = clientLicenseService.checkApplicationByUsername(username);
+        return Result.success(submission);
+    }
+
+    @RequestMapping("/PETdatabase/dataset/license/verifiedOrNot")
+    public Result checkIfVerified(@RequestHeader String token){
+        String username = JWTHelper.getUsername(token);
+        Integer id = registerService.getIdByUsername(username).getId();
+        if(clientLicenseService.checkIfVerified(id)){
+            return Result.success("Yes");
         }
-        else{
-            String username = JWTHelper.getUsername(token);
-            Submission submission = clientLicenseService.checkApplicationByUsername(username);
-            return Result.success(submission);
-        }
+        else return Result.success("No");
     }
 
     @RequestMapping("/PETdatabase/dataset/license/verifyEmail")
@@ -68,10 +77,13 @@ public class ClientLicenseController {
     }
 
     @RequestMapping("/PETdatabase/dataset/license/verifyCode")
-    public Result verifyCode(@RequestBody UserPojo userPojo){
+    public Result verifyCode(@RequestBody UserPojo userPojo, @RequestHeader String token){
         String jwtCode = userPojo.getJwtCode();
         String code = userPojo.getCode();
+        String username = JWTHelper.getUsername(token);
         if(registerService.checkVerifyCode(jwtCode, code)){
+            User user = registerService.getIdByUsername(username);
+            clientLicenseService.insertValidEmail(user.getId(), user.getEmail());
             return Result.success(true);
         }
         else return Result.error("Wrong or Expired code!", 50201);
@@ -82,5 +94,18 @@ public class ClientLicenseController {
         String username = JWTHelper.getUsername(token);
         Submission submission = clientLicenseService.getStatusByUsername(username);
         return Result.success(submission);
+    }
+
+    @RequestMapping("/PETdatabase/dataset/license/update")
+    public Result updateApplication(@RequestBody Submission submission, @RequestHeader String token){
+        //System.out.println(submission);
+        String username = JWTHelper.getUsername(token);
+        Integer id = registerService.getIdByUsername(username).getId();
+        if(!clientLicenseService.checkIfVerified(id)){
+            return Result.error("Email validation failed or expired!", 52004);
+        }
+        if(clientLicenseService.updateApplication(submission, username))
+            return Result.success();
+        else return Result.error("No submission found!", 52005);
     }
 }
