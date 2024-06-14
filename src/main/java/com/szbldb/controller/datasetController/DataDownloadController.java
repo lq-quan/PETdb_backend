@@ -5,6 +5,8 @@ import com.szbldb.service.datasetService.DataDownloadService;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,14 +19,15 @@ import java.util.List;
 @RestController
 public class DataDownloadController {
 
-    DataDownloadService dataDownloadService;
+    private final DataDownloadService dataDownloadService;
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     public DataDownloadController(@Autowired DataDownloadService dataDownloadService) {
         this.dataDownloadService = dataDownloadService;
     }
 
     @RequestMapping("/PETdatabase/dataset/download")
-    public Result dataDownload(Integer id) throws Exception{
+    public Result dataDownload(Integer id){
         System.out.println("File id: " + id);
         URL url = dataDownloadService.dataDownload(id);
         if(url == null)
@@ -52,7 +55,7 @@ public class DataDownloadController {
             try {
                 dispatcher.forward(request, response);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("failed to dispatch", e);
             }
         }
         return dataDownloadService.createZip(files);

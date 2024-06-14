@@ -4,6 +4,8 @@ import com.szbldb.pojo.Result;
 import com.szbldb.pojo.datasetPojo.*;
 import com.szbldb.service.datasetService.DataSetUploadService;
 import com.szbldb.util.JWTHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +19,7 @@ import java.util.List;
 @RestController
 public class DataSetUploadController {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final DataSetUploadService dataSetUploadService;
 
@@ -25,16 +28,20 @@ public class DataSetUploadController {
     }
 
     @RequestMapping("/PETdatabase/dataset/uploadinfo")
-    public Result uploadMeta(@RequestBody DataSet dataSet, @RequestHeader String token) throws Exception{
+    public Result uploadMeta(@RequestBody DataSet dataSet, @RequestHeader String token){
         System.out.println(dataSet);
         if(dataSet.getUploader() == null){
             String username = JWTHelper.getUsername(token);
             dataSet.setUploader(username);
         }
-        if(dataSetUploadService.uploadMeta(dataSet)){
-            return Result.success();
+        try {
+            if(dataSetUploadService.uploadMeta(dataSet)){
+                return Result.success();
+            }
+        } catch (Exception e) {
+            log.error("创建数据集失败", e);
         }
-            return Result.error("Exist dataset with the same name!", 40004);
+        return Result.error("Exist dataset with the same name!", 40004);
     }
 
     @RequestMapping("/PETdatabase/dataset/uploadtoken")
@@ -64,7 +71,7 @@ public class DataSetUploadController {
                 else return Result.error("Exist file with the same name!", 40011);
             }catch (PessimisticLockingFailureException deadlockE){
                 System.err.println("Caught DeadLock!");
-                //deadlockE.printStackTrace();
+                log.info("检测到死锁，即将尝试重新进行", deadlockE);
             }
         }
     }

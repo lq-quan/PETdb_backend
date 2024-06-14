@@ -6,6 +6,8 @@ import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.util.JWTHelper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -22,6 +24,8 @@ import java.util.Random;
 public class RegisterService {
 
     private final UserMapper userMapper;
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final JavaMailSender sender;
 
@@ -57,6 +61,7 @@ public class RegisterService {
         try{
             sender.send(mail);
         }catch (Exception e){
+            log.error("邮件发送失败", e);
             return null;
         }
         System.out.println("邮件发送完毕！");

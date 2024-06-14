@@ -21,6 +21,8 @@ import io.minio.*;
 import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Async;
@@ -39,6 +41,8 @@ import java.util.concurrent.TimeUnit;
 public class DataSetUploadService {
     private final DataSetMapper dataSetMapper;
     private final LogService logService;
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
 
@@ -89,8 +93,7 @@ public class DataSetUploadService {
             tokenInfo.setSTStoken(response.getCredentials().getSecurityToken());
             return tokenInfo;
         }catch (ClientException e){
-            System.out.println("Error Message: " + e.getErrMsg());
-            System.out.println("Error code: " + e.getErrCode());
+            log.error("failed to access", e);
         }
         return null;
     }
@@ -175,7 +178,7 @@ public class DataSetUploadService {
                     }
                 }
             }catch (Exception e){
-                e.printStackTrace();
+                log.error("上传文件失败", e);
             }
             return false;
         }
@@ -197,7 +200,7 @@ public class DataSetUploadService {
                                         .build()
                         ).build());
             }catch (Exception e){
-                e.printStackTrace();
+                log.error("上传文件失败", e);
                 return null;
             }
         }
@@ -233,7 +236,7 @@ public class DataSetUploadService {
                 }
             }
         }catch (Exception e){
-            e.printStackTrace();
+            log.error("获取上传文件链接失败", e);
         }
         return list;
     }
@@ -287,7 +290,7 @@ public class DataSetUploadService {
             type = args.contentType();
         }catch (Exception e){
             logService.addLog("失败：向 " + dataSet.getName() + " 上传 " + part.getFileName());
-            e.printStackTrace();
+            log.error("合并文件失败", e);
             return;
         }
         File file = new File(part.getId(), size, part.getFileName(), type);

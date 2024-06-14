@@ -69,7 +69,7 @@ public class ClientLicenseController {
         Map<String, Object> map = new HashMap<>();
         String code = registerService.validateEmail(email);
         if(code == null){
-            throw new RuntimeException("Fail to send code!");
+            return Result.error("邮件发送失败", 50103);
         }
         map.put("code", code);
         String jwtCode = JWTHelper.jwtPacker(map, 10);

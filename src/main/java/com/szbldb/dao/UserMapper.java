@@ -25,7 +25,7 @@ public interface UserMapper {
     Integer getIdByName(String username);
 
     @Options(useGeneratedKeys = true, keyProperty = "id")
-    @Insert("insert into user (username, password, email) VALUE (#{username}, #{password}, #{email})")
+    @Insert("insert into user (username, password, email) value (#{username}, #{password}, #{email})")
     void insertUser(User user);
 
     @Select("select email from user where username = #{username}")
@@ -40,6 +40,9 @@ public interface UserMapper {
     @Insert("insert into userinfo (id, name) value (#{id}, #{name})")
     void initUserInfo(UserInfo userInfo);
 
-    @Update("update userinfo set name = #{name}, roles = #{roles}, introduction = #{introduction}, avatar = #{avatar} where id = #{id}")
+    @Update("update userinfo set name = #{name}, roles = #{roles}, introduction = #{introduction} where id = #{id}")
     void changeUserInfo(UserInfo userInfo);
+
+    @Update("update userinfo set avatar = #{avatarFilename} where id = #{id}")
+    void changeAvatarById(Integer id, String avatarFilename);
 }

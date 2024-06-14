@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <!--配置集中管理属性 我们可以直接更改属性value的值 格式: ${name}-->
+    <property name="pattern" value="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %c %M %L [%thread] %m%n"/>
+
+
+    <appender name="console" class = "ch.qos.logback.core.ConsoleAppender">
+        <!--控制输出流对象 默认System.out改为System.err-->
+        <target>System.err</target>
+        <!--引用上面的属性 用${name}-->
+        <encoder class = "ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${pattern}</pattern>
+        </encoder>
+    </appender>
+
+    <property name="log_dir" value="D:/logs"/>
+
+    <appender name="rollFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log_dir}/roll_logback.log</file>
+        <!--日志消息格式配置-->
+        <encoder class = "ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${pattern}</pattern>
+        </encoder>
+        <!--指定拆分规则-->
+        <rollingPolicy class = "ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log_dir}/logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!--按照文件大小拆分-->
+            <maxHistory>180</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!--root logger-->
+    <root level = "INFO">
+        <appender-ref ref="console"/>
+        <appender-ref ref="rollFile"/>
+    </root>
+</configuration>

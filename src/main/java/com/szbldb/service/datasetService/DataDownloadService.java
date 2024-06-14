@@ -14,6 +14,8 @@ import com.szbldb.service.logService.LogService;
 import io.minio.*;
 import io.minio.http.Method;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,8 @@ import java.util.zip.ZipOutputStream;
 @Service
 public class DataDownloadService {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
 
     private final DataSetMapper dataSetMapper;
@@ -45,11 +49,17 @@ public class DataDownloadService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public URL dataDownload(Integer fileId) throws Exception{
+    public URL dataDownload(Integer fileId){
         DataSetLoc dataSetLoc = dataSetMapper.searchLocByFileId(fileId);
         if(dataSetLoc == null) return null;
         String endpoint = dataSetLoc.getEndpoint();
-        EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+        EnvironmentVariableCredentialsProvider credentialsProvider;
+        try {
+            credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+        } catch (com.aliyuncs.exceptions.ClientException e) {
+            log.error("获取用于登录OSS的环境变量失败", e);
+            return null;
+        }
         String bucketName = dataSetLoc.getBucketName();
         String objectName = dataSetLoc.getObjectName() + dataSetMapper.getFileByFileId(fileId).getName();
         //System.out.println(objectName);
@@ -61,10 +71,8 @@ public class DataDownloadService {
             request.setExpiration(expiration);
             signedUrl = ossClient.generatePresignedUrl(request);
             return signedUrl;
-        }catch (OSSException oe){
-            System.out.println("Caught an OSSException");
-        }catch (ClientException ce){
-            System.out.println("Caught a ClientException");
+        }catch (Exception e){
+            log.error("获取OSS文件失败", e);
         }
         return null;
     }
@@ -92,7 +100,7 @@ public class DataDownloadService {
                             .build());
         }catch (Exception e){
             logService.addLog("失败：获取 " + dataSet.getName() + " 中文件 " + filename + " 的下载链接");
-            e.printStackTrace();
+            log.error("获取下载链接失败", e);
         }
         dataSetMapper.updateDownloads(dataSet.getId());
         logService.addLog("成功：获取 " + dataSet.getName() + " 中文件 " + filename + " 的下载链接");
@@ -144,7 +152,7 @@ public class DataDownloadService {
             dataSetMapper.updateDownloads(dataSet.getId());
             return ResponseEntity.ok().headers(headers).body(streamingResponseBody);
         }catch (Exception e){
-            e.printStackTrace();
+            log.error("流式返回压缩包文件失败", e);
             return ResponseEntity.noContent().build();
         }
     }

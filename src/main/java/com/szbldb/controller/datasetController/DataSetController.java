@@ -4,6 +4,8 @@ import com.szbldb.pojo.Result;
 import com.szbldb.pojo.datasetPojo.DataSet;
 import com.szbldb.pojo.datasetPojo.DataSetList;
 import com.szbldb.service.datasetService.DataSetService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class DataSetController {
 
     private final DataSetService dataSetService;
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     DataSetController(@Autowired DataSetService dataSetService){
         this.dataSetService = dataSetService;
@@ -37,18 +41,24 @@ public class DataSetController {
     }
 
     @RequestMapping("/PETdatabase/dataset/deleteFile")
-    public Result deleteFile(Integer id) throws Exception{
-        dataSetService.deleteFile(id);
+    public Result deleteFile(Integer id){
+        try {
+            dataSetService.deleteFile(id);
+        } catch (Exception e) {
+            log.error("删除文件失败", e);
+        }
         return Result.success();
     }
 
     @RequestMapping("/PETdatabase/dataset/delete")
-    public Result deleteDataset(Integer id) throws Exception{
+    public Result deleteDataset(Integer id){
         try{
             dataSetService.deleteDataset(id);
         }catch (RuntimeException e){
-            e.printStackTrace();
             return Result.error("failed to delete. The dataset might not be empty", 40009);
+        }catch (Exception e){
+            log.error("删除数据集失败", e);
+            return Result.error("failed to delete", 40009);
         }
         return Result.success();
     }

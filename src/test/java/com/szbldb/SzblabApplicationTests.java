@@ -1,6 +1,8 @@
 package com.szbldb;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.scheduling.annotation.EnableAsync;
 
@@ -12,12 +14,11 @@ import java.util.List;
 @SpringBootTest
 class SzblabApplicationTests {
 
+    //private final Logger log = LoggerFactory.getLogger(getClass());
+
     @Test
-    void contextLoads() throws UnknownHostException {
-        List<Integer> list = new ArrayList<>();
-        list.add(123);
-        list.add(456);
-        System.out.println(list);
+    void contextLoads(){
+        System.out.println(3 / 2);
     }
 
 
