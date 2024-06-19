@@ -5,8 +5,7 @@ import com.szbldb.service.datasetService.DataDownloadService;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,12 +14,12 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.net.URL;
 import java.util.List;
 
-
+@Slf4j
 @RestController
 public class DataDownloadController {
 
     private final DataDownloadService dataDownloadService;
-    private final Logger log = LoggerFactory.getLogger(getClass());
+
 
     public DataDownloadController(@Autowired DataDownloadService dataDownloadService) {
         this.dataDownloadService = dataDownloadService;

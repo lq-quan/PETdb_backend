@@ -12,8 +12,7 @@ import com.szbldb.pojo.datasetPojo.File;
 import com.szbldb.service.logService.LogService;
 import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,13 +28,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+@Slf4j
 @Service
 public class DataSetService {
 
     private final DataSetMapper dataSetMapper;
     private final LogService logService;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
 
@@ -90,7 +89,7 @@ public class DataSetService {
                         .build());
             }catch (Exception e){
                 logService.addLog("失败：删除 " + dataSet.getName() + " 中的 " + deletedFile.getName());
-                log.error("删除文件失败", e);
+                throw e;
             }
             logService.addLog("成功：删除 " + dataSet.getName() + " 中的 " + deletedFile.getName());
             return;

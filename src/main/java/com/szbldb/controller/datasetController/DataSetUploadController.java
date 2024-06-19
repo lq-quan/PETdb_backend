@@ -4,8 +4,7 @@ import com.szbldb.pojo.Result;
 import com.szbldb.pojo.datasetPojo.*;
 import com.szbldb.service.datasetService.DataSetUploadService;
 import com.szbldb.util.JWTHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @RestController
 public class DataSetUploadController {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final DataSetUploadService dataSetUploadService;
 

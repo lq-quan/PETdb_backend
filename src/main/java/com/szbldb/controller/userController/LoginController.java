@@ -5,12 +5,14 @@ import com.szbldb.pojo.userPojo.User;
 
 import com.szbldb.service.userService.LoginService;
 import com.szbldb.util.JWTHelper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 public class LoginController {
 

@@ -2,15 +2,14 @@ package com.szbldb.exception;
 
 import com.szbldb.pojo.Result;
 import io.jsonwebtoken.ExpiredJwtException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
     @ExceptionHandler(Exception.class)
     public Result error(Exception e){
         log.error("捕获到异常", e);
@@ -19,7 +18,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ExpiredJwtException.class)
     public Result expired(ExpiredJwtException ee){
-        log.info("用户登录失效");
+        log.trace("用户登录失效", ee);
         return Result.error("Not_Login", 50007);
     }
 }

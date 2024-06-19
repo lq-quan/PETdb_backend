@@ -20,9 +20,8 @@ import com.szbldb.service.logService.LogService;
 import io.minio.*;
 import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Async;
@@ -37,12 +36,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 public class DataSetUploadService {
     private final DataSetMapper dataSetMapper;
     private final LogService logService;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
 

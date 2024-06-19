@@ -4,18 +4,17 @@ import com.szbldb.pojo.Result;
 import com.szbldb.pojo.datasetPojo.DataSet;
 import com.szbldb.pojo.datasetPojo.DataSetList;
 import com.szbldb.service.datasetService.DataSetService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 public class DataSetController {
 
     private final DataSetService dataSetService;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     DataSetController(@Autowired DataSetService dataSetService){
         this.dataSetService = dataSetService;

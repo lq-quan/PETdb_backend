@@ -13,9 +13,8 @@ import com.szbldb.pojo.datasetPojo.File;
 import com.szbldb.service.logService.LogService;
 import io.minio.*;
 import io.minio.http.Method;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -33,10 +32,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 
+@Slf4j
 @Service
 public class DataDownloadService {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
 
