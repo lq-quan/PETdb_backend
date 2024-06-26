@@ -38,6 +38,7 @@ public class DataDownloadService {
 
 
     private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
+    private final String bucket = "test";
 
     private final DataSetMapper dataSetMapper;
     private final LogService logService;
@@ -61,7 +62,6 @@ public class DataDownloadService {
         }
         String bucketName = dataSetLoc.getBucketName();
         String objectName = dataSetLoc.getObjectName() + dataSetMapper.getFileByFileId(fileId).getName();
-        //System.out.println(objectName);
         OSS ossClient = new OSSClientBuilder().build(endpoint, credentialsProvider);
         URL signedUrl;
         try{
@@ -92,7 +92,7 @@ public class DataDownloadService {
             url = client.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.GET)
-                            .bucket(loc.getBucketName())
+                            .bucket(bucket)
                             .object(loc.getObjectName() + filename)
                             .expiry(2, TimeUnit.HOURS)
                             .extraQueryParams(reqParams)
@@ -124,7 +124,7 @@ public class DataDownloadService {
                 String object = loc.getObjectName() + file.getName();
                 names[i] = file.getName();
                 InputStream stream = client.getObject(GetObjectArgs.builder()
-                        .bucket("test")
+                        .bucket(bucket)
                         .object(object).build());
                 streams.add(stream);
                 i++;

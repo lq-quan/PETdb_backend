@@ -1,5 +1,6 @@
 package com.szbldb.controller.extensionController;
 
+import com.szbldb.exception.ExtensionException;
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.extensionPojo.Collection;
 import com.szbldb.pojo.extensionPojo.CollectionList;
@@ -25,7 +26,7 @@ public class CollectionController {
         Integer cid;
         try {
             cid = collectionService.createCollection(username, collection);
-        } catch (RuntimeException e) {
+        } catch (ExtensionException e) {
             return Result.error("数量超出限制或名称重复", 60002);
         }
         return Result.success(cid);
@@ -44,7 +45,7 @@ public class CollectionController {
         try {
             Collection collection = collectionService.getCollectionDetail(collectionId, username);
             return Result.success(collection);
-        } catch (RuntimeException e) {
+        } catch (ExtensionException e) {
             return Result.error("访问Collection失败", 60001);
         }
     }
@@ -56,7 +57,7 @@ public class CollectionController {
             if(!collectionService.deleteCollection(collectionId, username)){
                 return Result.error("无法删除非空Collection", 60001);
             }
-        } catch (RuntimeException e) {
+        } catch (ExtensionException e) {
             return Result.error("访问Collection失败", 60001);
         }
         return Result.success();
@@ -67,7 +68,7 @@ public class CollectionController {
         String username = JWTHelper.getUsername(token);
         try {
             collectionService.addDatasetToCollection(datasetId, collectionId, username);
-        } catch (RuntimeException e) {
+        } catch (ExtensionException e) {
             return Result.error("访问Collection失败", 60001);
         }
         return Result.success();
@@ -78,7 +79,7 @@ public class CollectionController {
         String username = JWTHelper.getUsername(token);
         try {
             collectionService.deleteDatasetFromCollection(datasetId, collectionId, username);
-        } catch (RuntimeException e) {
+        } catch (ExtensionException e) {
             return Result.error("访问Collection失败", 60001);
         }
         return Result.success();

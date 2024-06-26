@@ -1,6 +1,7 @@
 package com.szbldb.service.extensionService;
 
 import com.szbldb.dao.ExtensionMapper;
+import com.szbldb.exception.ExtensionException;
 import com.szbldb.pojo.datasetPojo.DataSet;
 import com.szbldb.pojo.extensionPojo.Collection;
 import com.szbldb.pojo.extensionPojo.CollectionList;
@@ -26,7 +27,7 @@ public class CollectionService {
         collection.setCreateTime(LocalDateTime.now());
         if(extensionMapper.checkCollectionCount(username) == 10 ||
                 extensionMapper.checkIfExisted(username, collection.getName()) == 1){
-            throw new RuntimeException();
+            throw new ExtensionException("数量超出限制或名称重复");
         }
         extensionMapper.createCollection(username, collection);
         return collection.getId();
@@ -41,9 +42,9 @@ public class CollectionService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Collection getCollectionDetail(Integer cid, String username) throws RuntimeException{
+    public Collection getCollectionDetail(Integer cid, String username) throws ExtensionException {
         if(extensionMapper.checkIfUserColl(username, cid) != 1){
-            RuntimeException exception = new RuntimeException("用户试图获取非本人Collection");
+            ExtensionException exception = new ExtensionException("用户试图获取非本人Collection");
             log.warn("用户试图获取非本人Collection", exception);
             throw exception;
         }
@@ -55,9 +56,9 @@ public class CollectionService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteCollection(Integer cid, String username) throws RuntimeException{
+    public boolean deleteCollection(Integer cid, String username) throws ExtensionException {
         if(extensionMapper.checkIfUserColl(username, cid) != 1){
-            RuntimeException exception = new RuntimeException("用户试图删除非本人Collection");
+            ExtensionException exception = new ExtensionException("用户试图删除非本人Collection");
             log.warn("用户试图删除非本人Collection", exception);
             throw exception;
         }
@@ -67,9 +68,9 @@ public class CollectionService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void addDatasetToCollection(Integer did, Integer cid, String username) throws RuntimeException{
+    public void addDatasetToCollection(Integer did, Integer cid, String username) throws ExtensionException {
         if(extensionMapper.checkIfUserColl(username, cid) != 1){
-            RuntimeException exception = new RuntimeException("用户试图修改非本人Collection");
+            ExtensionException exception = new ExtensionException("用户试图修改非本人Collection");
             log.warn("用户试图修改非本人Collection", exception);
             throw exception;
         }
@@ -77,9 +78,9 @@ public class CollectionService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void deleteDatasetFromCollection(Integer did, Integer cid, String username) throws RuntimeException{
+    public void deleteDatasetFromCollection(Integer did, Integer cid, String username) throws ExtensionException {
         if(extensionMapper.checkIfUserColl(username, cid) != 1){
-            RuntimeException exception = new RuntimeException("用户试图修改非本人Collection");
+            ExtensionException exception = new ExtensionException("用户试图修改非本人Collection");
             log.warn("用户试图修改非本人Collection", exception);
             throw exception;
         }

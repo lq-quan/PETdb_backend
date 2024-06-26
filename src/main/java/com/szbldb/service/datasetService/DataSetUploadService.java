@@ -14,6 +14,7 @@ import com.aliyuncs.http.MethodType;
 import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
 import com.szbldb.dao.DataSetMapper;
+import com.szbldb.exception.DataSetException;
 import com.szbldb.pojo.datasetPojo.*;
 import com.szbldb.pojo.datasetPojo.File;
 import com.szbldb.service.logService.LogService;
@@ -44,6 +45,7 @@ public class DataSetUploadService {
 
 
     private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
+    private final String bucket = "test";
 
     public DataSetUploadService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService) throws UnknownHostException {
         this.logService = logService;
@@ -92,7 +94,7 @@ public class DataSetUploadService {
             tokenInfo.setSTStoken(response.getCredentials().getSecurityToken());
             return tokenInfo;
         }catch (ClientException e){
-            log.error("failed to access", e);
+            log.error("failed to access OSS", e);
         }
         return null;
     }
@@ -107,7 +109,7 @@ public class DataSetUploadService {
         dataSetLoc.setId(dataSet.getId());
         dataSetLoc.setObjectName(dataSet.getType() + '/' + dataSet.getName() + '/');
         if("local".equals(dataSet.getStatus())){
-            dataSetLoc.setBucketName("test");
+            dataSetLoc.setBucketName(bucket);
             dataSetMapper.insertLoc(dataSetLoc);
             logService.addLog("成功：创建数据集 " + dataSet.getName());
             return true;
@@ -130,7 +132,8 @@ public class DataSetUploadService {
             System.out.println("Error Code:" + oe.getErrorCode());
             System.out.println("Request ID:" + oe.getRequestId());
             System.out.println("Host ID:" + oe.getHostId());
-            throw oe;
+            log.error("访问OSS失败", oe);
+            throw new DataSetException("访问OSS失败");
         } finally {
             if (ossClient != null) {
                 ossClient.shutdown();
@@ -170,7 +173,7 @@ public class DataSetUploadService {
                 int i = 0;
                 while(true){
                     try{
-                        client.statObject(StatObjectArgs.builder().bucket("test").object(object + "." + i).build());
+                        client.statObject(StatObjectArgs.builder().bucket(bucket).object(object + "." + i).build());
                         uploaded.add(i++);
                     }catch (ErrorResponseException ee){
                         if(flag++ == 2) break;
@@ -181,7 +184,7 @@ public class DataSetUploadService {
             }
             return false;
         }
-        else{
+        else{//文件已在其他数据集存在，直接Copy
             DataSet dataSet = dataSetMapper.getDatasetById(origin.getDatasetId());
             String toObject = toDataset.getType() + "/" + toDataset.getName() + "/" + part.getFileName();
             String originFileObject = dataSet.getType() + "/" + dataSet.getName() + "/" + origin.getName();
@@ -190,11 +193,11 @@ public class DataSetUploadService {
                     .credentials("lqquan", "12345678")
                     .build()){
                 client.copyObject(CopyObjectArgs.builder()
-                        .bucket("test")
+                        .bucket(bucket)
                         .object(toObject)
                         .source(
                                 CopySource.builder()
-                                        .bucket("test")
+                                        .bucket(bucket)
                                         .object(originFileObject)
                                         .build()
                         ).build());
@@ -223,11 +226,11 @@ public class DataSetUploadService {
             if(part.getFileSize() % part.getChunkSize() == 0) chunkCount--;
             for(int i = 0; i < chunkCount; i++){
                 try{
-                    client.statObject(StatObjectArgs.builder().bucket("test").object(object + "." + i).build());
+                    client.statObject(StatObjectArgs.builder().bucket(bucket).object(object + "." + i).build());
                 }catch (ErrorResponseException e){
                     String urlI = client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                             .method(Method.PUT)
-                            .bucket("test")
+                            .bucket(bucket)
                             .object(object + "." + i)
                             .expiry(1, TimeUnit.HOURS)
                             .build());
@@ -255,36 +258,36 @@ public class DataSetUploadService {
             int i = 0;
             while(true){
                 try{
-                    client.statObject(StatObjectArgs.builder().bucket("test").object(object + "." + i).build());
-                    sources.add(ComposeSource.builder().bucket("test").object(object + "." + i).build());
+                    client.statObject(StatObjectArgs.builder().bucket(bucket).object(object + "." + i).build());
+                    sources.add(ComposeSource.builder().bucket(bucket).object(object + "." + i).build());
                 }catch (ErrorResponseException e){
                     break;
                 }
                 i++;
             }
             client.composeObject(ComposeObjectArgs.builder()
-                    .bucket("test")
+                    .bucket(bucket)
                     .object(dataSet.getType() + "/" + dataSet.getName() + "/" + part.getFileName())
                     .sources(sources)
                     .build());
             while(--i >= 0){
                 client.removeObject(RemoveObjectArgs.builder()
-                        .bucket("test")
+                        .bucket(bucket)
                         .object(object + "." + i)
                         .build());
             }
             object = dataSet.getType() + "/" + dataSet.getName() + "/" + part.getFileName();
-            try(InputStream input = client.getObject(GetObjectArgs.builder().bucket("test").object(object).build())){
+            try(InputStream input = client.getObject(GetObjectArgs.builder().bucket(bucket).object(object).build())){
                 md5 = DigestUtils.md5Hex(input);
                 if(!md5.equals(part.getFileMd5())){
                     client.removeObject(RemoveObjectArgs.builder()
-                            .bucket("test")
+                            .bucket(bucket)
                             .object(object)
                             .build());
                     throw new RuntimeException("Md5对比失败");
                 }
             }
-            StatObjectResponse args = client.statObject(StatObjectArgs.builder().bucket("test").object(object).build());
+            StatObjectResponse args = client.statObject(StatObjectArgs.builder().bucket(bucket).object(object).build());
             size = args.size();
             type = args.contentType();
         }catch (Exception e){
@@ -300,7 +303,7 @@ public class DataSetUploadService {
                 logService.addLog("成功：向 " + dataSet.getName() + " 上传 " + part.getFileName());
                 return;
             }catch (PessimisticLockingFailureException pe){
-                System.out.println("Caught deadlock!");
+                log.info("检测到死锁，将尝试重新进行", pe);
             }
         }
     }

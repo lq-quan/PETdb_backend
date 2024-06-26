@@ -5,6 +5,7 @@ import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.OSSException;
 import com.szbldb.dao.DataSetMapper;
+import com.szbldb.exception.DataSetException;
 import com.szbldb.pojo.datasetPojo.DataSet;
 import com.szbldb.pojo.datasetPojo.DataSetList;
 import com.szbldb.pojo.datasetPojo.DataSetLoc;
@@ -37,6 +38,7 @@ public class DataSetService {
 
 
     private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
+    private final String bucket = "test";
 
     public DataSetService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService) throws UnknownHostException {
         this.logService = logService;
@@ -70,7 +72,7 @@ public class DataSetService {
     }
 
     @Transactional(rollbackFor = Exception.class)// 设置isolation = Isolation.SERIALIZABLE，可阻止事务并行
-    public void deleteFile(Integer fileId) throws Exception{
+    public void deleteFile(Integer fileId) throws DataSetException{
         File deletedFile = dataSetMapper.getFileByFileId(fileId);
         dataSetMapper.deleteFile(fileId);
         Long size = deletedFile.getSize();
@@ -84,12 +86,13 @@ public class DataSetService {
                     .credentials("lqquan", "12345678")
                     .build()){
                 client.removeObject(RemoveObjectArgs.builder()
-                        .bucket("test")
+                        .bucket(bucket)
                         .object(objectName)
                         .build());
             }catch (Exception e){
                 logService.addLog("失败：删除 " + dataSet.getName() + " 中的 " + deletedFile.getName());
-                throw e;
+                log.error("删除文件失败", e);
+                throw new DataSetException("删除文件失败");
             }
             logService.addLog("成功：删除 " + dataSet.getName() + " 中的 " + deletedFile.getName());
             return;
@@ -100,7 +103,7 @@ public class DataSetService {
             credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
         } catch (com.aliyuncs.exceptions.ClientException e) {
             log.error("获取用于登录OSS的环境变量失败", e);
-            throw e;
+            throw new DataSetException("获取用于登录OSS的环境变量失败");
         }
         String bucketName = "szbldb-test";
         OSS ossClient = new OSSClientBuilder().build(endpoint, credentialsProvider);
@@ -142,7 +145,7 @@ public class DataSetService {
                     .credentials("lqquan", "12345678")
                     .build()){
                 client.removeObject(RemoveObjectArgs.builder()
-                        .bucket("test")
+                        .bucket(bucket)
                         .object(loc.getObjectName())
                         .build());
             }catch (Exception e){
