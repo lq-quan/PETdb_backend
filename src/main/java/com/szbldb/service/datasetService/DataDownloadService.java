@@ -7,6 +7,7 @@ import com.aliyun.oss.common.auth.CredentialsProviderFactory;
 import com.aliyun.oss.common.auth.EnvironmentVariableCredentialsProvider;
 import com.aliyun.oss.model.GeneratePresignedUrlRequest;
 import com.szbldb.dao.DataSetMapper;
+import com.szbldb.exception.DataSetException;
 import com.szbldb.pojo.datasetPojo.DataSet;
 import com.szbldb.pojo.datasetPojo.DataSetLoc;
 import com.szbldb.pojo.datasetPojo.File;
@@ -121,6 +122,7 @@ public class DataDownloadService {
             int i = 0;
             for(Integer fileId : fileIDs){
                 File file = dataSetMapper.getFileByFileId(fileId);
+                if(file.getDatasetId() - dataSet.getId() != 0) throw new DataSetException("Files不属于同一数据集");
                 String object = loc.getObjectName() + file.getName();
                 names[i] = file.getName();
                 InputStream stream = client.getObject(GetObjectArgs.builder()

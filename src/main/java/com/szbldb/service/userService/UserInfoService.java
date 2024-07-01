@@ -70,13 +70,14 @@ public class UserInfoService {
                 .endpoint("http://" + ipAddress + ":9000")
                 .credentials("lqquan", "12345678")
                 .build()){
+            String newAvatar = username + avatar.substring(avatar.lastIndexOf("."));
             String url =  client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                     .method(Method.PUT)
                     .bucket("test")
-                    .object("images/" + username + "." + avatar.substring(avatar.lastIndexOf(".")))
+                    .object("images/" + newAvatar)
                     .expiry(1, TimeUnit.HOURS)
                     .build());
-            userMapper.changeAvatarById(id, avatar);
+            userMapper.changeAvatarById(id, newAvatar);
             return url;
         }catch (Exception e){
             log.error("头像图片上传出错", e);

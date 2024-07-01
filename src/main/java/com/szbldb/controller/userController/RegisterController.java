@@ -4,6 +4,7 @@ import com.szbldb.pojo.Result;
 import com.szbldb.pojo.userPojo.UserPojo;
 import com.szbldb.service.userService.RegisterService;
 import com.szbldb.util.JWTHelper;
+import com.szbldb.util.MailHelper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class RegisterController {
         }
         else
             return Result.error("The name was already used by others!", 50101);
-        String code = registerService.validateEmail(email);
+        String code = MailHelper.sendEmail(email);
         if(code != null) {
             map.put("code", code);
             String jwtCode = JWTHelper.jwtPacker(map, 10);
@@ -50,7 +51,7 @@ public class RegisterController {
     public Result checkCode(@RequestBody UserPojo codePojo){
         String jwtCode = codePojo.getJwtCode();
         String code = codePojo.getCode();
-        if(registerService.checkVerifyCode(jwtCode, code)){
+        if(MailHelper.verifyCode(jwtCode, code)){
             Claims claimsCode;
             try {
                 claimsCode = JWTHelper.jwtUnpack(jwtCode);

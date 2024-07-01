@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
     <!--配置集中管理属性 我们可以直接更改属性value的值 格式: ${name}-->
-    <property name="pattern" value="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %c %M %L [%thread] %m%n"/>
+    <property name="patternConsole" value="%highlight([%-5level]) %d{yyyy-MM-dd HH:mm:ss} %green([%thread]) %c %magenta(%M) %boldYellow(%L) %highlight(%m%n)"/>
+    <property name="patternFile" value="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %c %M %L %m%n"/>
 
 
     <appender name="console" class = "ch.qos.logback.core.ConsoleAppender">
         <!--引用上面的属性 用${name}-->
         <encoder class = "ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>${pattern}</pattern>
+            <pattern>${patternConsole}</pattern>
         </encoder>
     </appender>
 
@@ -17,7 +18,7 @@
         <file>${log_dir}/roll_logback.log</file>
         <!--日志消息格式配置-->
         <encoder class = "ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>${pattern}</pattern>
+            <pattern>${patternFile}</pattern>
         </encoder>
         <!--指定拆分规则-->
         <rollingPolicy class = "ch.qos.logback.core.rolling.TimeBasedRollingPolicy">

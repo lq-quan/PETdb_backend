@@ -43,6 +43,6 @@ public interface UserMapper {
     @Update("update userinfo set name = #{name}, roles = #{roles}, introduction = #{introduction} where id = #{id}")
     void changeUserInfo(UserInfo userInfo);
 
-    @Update("update userinfo set avatar = #{avatarFilename} where id = #{id}")
-    void changeAvatarById(Integer id, String avatarFilename);
+    @Update("update userinfo set avatar = #{avatar} where id = #{id}")
+    void changeAvatarById(Integer id, String avatar);
 }

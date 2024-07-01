@@ -7,6 +7,7 @@ import com.szbldb.pojo.userPojo.UserPojo;
 import com.szbldb.service.licenseService.ClientLicenseService;
 import com.szbldb.service.userService.RegisterService;
 import com.szbldb.util.JWTHelper;
+import com.szbldb.util.MailHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -67,7 +68,7 @@ public class ClientLicenseController {
             throw new RuntimeException("No email found");
         }
         Map<String, Object> map = new HashMap<>();
-        String code = registerService.validateEmail(email);
+        String code = MailHelper.sendEmail(email);
         if(code == null){
             return Result.error("邮件发送失败", 50103);
         }
@@ -81,7 +82,7 @@ public class ClientLicenseController {
         String jwtCode = userPojo.getJwtCode();
         String code = userPojo.getCode();
         String username = JWTHelper.getUsername(token);
-        if(registerService.checkVerifyCode(jwtCode, code)){
+        if(MailHelper.verifyCode(jwtCode, code)){
             User user = registerService.getIdByUsername(username);
             clientLicenseService.insertValidEmail(user.getId(), user.getEmail());
             return Result.success(true);
