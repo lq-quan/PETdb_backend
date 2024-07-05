@@ -20,11 +20,21 @@ public class DataDownloadController {
 
     private final DataDownloadService dataDownloadService;
 
-
+    /**
+     *
+     * @param dataDownloadService 数据下载服务组件
+     * @author Quan Li 2024/7/3 17:55
+     **/
     public DataDownloadController(@Autowired DataDownloadService dataDownloadService) {
         this.dataDownloadService = dataDownloadService;
     }
 
+    /**
+     * 
+     * @param id 文件id
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/3 17:56
+     **/
     @RequestMapping("/PETdatabase/dataset/download")
     public Result dataDownload(Integer id){
         System.out.println("File id: " + id);
@@ -34,6 +44,13 @@ public class DataDownloadController {
         return Result.success(url);
     }
 
+    /**
+     * 
+     *
+     * @param id 文件id
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/3 17:59
+     **/
     @RequestMapping("/PETdatabase/dataset/downloadLocal")
     public Result downloadLocal(@RequestParam Integer id) {
         if(id == null) return Result.error("Nothing Selected", 40009);
@@ -43,6 +60,15 @@ public class DataDownloadController {
         return Result.success(url);
     }
 
+    /**
+     * 
+     *
+     * @param files 文件 id 列表（需要属于同一数据集）
+     * @param request 请求体，用于转发
+     * @param response 响应体，用于写入数据
+     * @return org.springframework.http.ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody>
+     * @author Quan Li 2024/7/3 18:00
+     **/
     @RequestMapping("/PETdatabase/dataset/downloadZip")
     public ResponseEntity<StreamingResponseBody> downloadZip(@RequestParam("files") List<Integer> files,
                                                              HttpServletRequest request, HttpServletResponse response){

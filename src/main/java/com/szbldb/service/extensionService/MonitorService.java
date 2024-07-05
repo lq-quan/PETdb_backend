@@ -14,6 +14,13 @@ public class MonitorService {
     public MonitorService(ExtensionMapper extensionMapper){
         this.extensionMapper = extensionMapper;
     }
+
+    /**
+     *
+     * @Description 无参方法，返回流量管理信息
+     * @return com.szbldb.pojo.extensionPojo.MonitorRes
+     * @author Quan Li 2024/7/5 15:54
+     **/
     public MonitorRes getMonitorInfo(){
         MonitorRes res = new MonitorRes();
         res.setUsers(extensionMapper.getUsersNum());

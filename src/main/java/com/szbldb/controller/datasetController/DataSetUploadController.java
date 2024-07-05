@@ -26,7 +26,14 @@ public class DataSetUploadController {
         this.dataSetUploadService = dataSetUploadService;
     }
 
-    @RequestMapping("/PETdatabase/dataset/uploadinfo")
+    /**
+     *
+     * @param dataSet 新建数据集信息
+     * @param token 用户令牌
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:07
+     **/
+    @RequestMapping("/PETdatabase/dataset/manage/uploadinfo")
     public Result uploadMeta(@RequestBody DataSet dataSet, @RequestHeader String token){
         System.out.println(dataSet);
         if(dataSet.getUploader() == null){
@@ -43,7 +50,13 @@ public class DataSetUploadController {
         return Result.error("Exist dataset with the same name!", 40004);
     }
 
-    @RequestMapping("/PETdatabase/dataset/uploadtoken")
+    /**
+     *
+     * @Description 无参方法，获取用于往OSS上传数据的 STSToken
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:11
+     **/
+    @RequestMapping("/PETdatabase/dataset/manage/uploadtoken")
     public Result getStsToken(){
         StsTokenInfo tokenInfo = dataSetUploadService.datasetUpload();
         if(tokenInfo == null)
@@ -51,14 +64,29 @@ public class DataSetUploadController {
         return Result.success(tokenInfo);
     }
 
-    @RequestMapping("/PETdatabase/dataset/update")
+    /**
+     *
+     * @param dataSet 数据集 id 以及需要更新的数据
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:13
+     **/
+    @RequestMapping("/PETdatabase/dataset/manage/update")
     public Result changeMeta(@RequestBody DataSet dataSet){
         System.out.println(dataSet);
         dataSetUploadService.changeMeta(dataSet);
         return Result.success();
     }
 
-    @RequestMapping("/PETdatabase/dataset/callback")
+    /**
+     *
+     * @param id 数据集 id
+     * @param name 文件名
+     * @param type 文件类型
+     * @param size 文件大小
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:15
+     **/
+    @RequestMapping("/PETdatabase/dataset/manage/callback")
     public Result uploadFile(Integer id, String name, String type, Long size){
         if(name != null && name.length() > 100) return Result.error("Name too long! (more than 100 characters)", 40012);
         File file = new File(id, size, name, type);
@@ -75,7 +103,13 @@ public class DataSetUploadController {
         }
     }
 
-    @RequestMapping("/PETdatabase/dataset/uploadLocal")
+    /**
+     *
+     * @param part 文件分片信息
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:17
+     **/
+    @RequestMapping("/PETdatabase/dataset/manage/uploadLocal")
     public Result uploadLocal(@RequestBody FilePart part){
         List<String> urls = dataSetUploadService.uploadLocal(part);
         UploadLocalRes res = new UploadLocalRes();
@@ -83,7 +117,13 @@ public class DataSetUploadController {
         return Result.success(res);
     }
 
-    @RequestMapping("/PETdatabase/dataset/mergefile")
+    /**
+     *
+     * @param part 获取文件信息，MD5
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:24
+     **/
+    @RequestMapping("/PETdatabase/dataset/manage/mergefile")
     public Result mergeFile(@RequestBody FilePart part){
         dataSetUploadService.mergeFile(part);
         UploadLocalRes res = new UploadLocalRes();
@@ -91,7 +131,14 @@ public class DataSetUploadController {
         return Result.success(res);
     }
 
-    @RequestMapping("/PETdatabase/dataset/checkmd5")
+    /**
+     *
+     *
+     * @param part 获取文件信息，检查文件名以及 MD5
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:25
+     **/
+    @RequestMapping("/PETdatabase/dataset/manage/checkmd5")
     public Result checkMd5(FilePart part){
         UploadLocalRes res = new UploadLocalRes();
         List<Integer> uploaded = new ArrayList<>();

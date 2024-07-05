@@ -7,6 +7,8 @@ import com.szbldb.util.JWTHelper;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.Date;
 
@@ -19,6 +21,14 @@ public class LoginService {
         this.userMapper = userMapper;
     }
 
+    /**
+     *
+     * @Description 登录检查
+     * @param username 用户名
+     * @param password 密码
+     * @return boolean
+     * @author Quan Li 2024/7/5 16:23
+     **/
     public boolean check(String username, String password) throws UserException{
         User user = userMapper.getUserByUsername(username);
         if(user == null) return false;
@@ -28,14 +38,38 @@ public class LoginService {
         return correctOrNot;
     }
 
+    /**
+     *
+     * @Description 更新管理员登录信息
+     * @param username 用户名
+     * @param ipAddress IP 地址
+     * @param token 令牌
+     * @author Quan Li 2024/7/5 16:23
+     **/
+    @Transactional(rollbackFor = Exception.class)
+    public void updateAdmin(String username, String ipAddress, String token){
+        String formerToken = userMapper.checkTokenOfAdmin(username);
+        Date expireTime = new Date(System.currentTimeMillis() + 24 * 3600 * 1000L);
+        if(!token.equals(formerToken)){
+            if(userMapper.checkLogout(token) != 1){
+                userMapper.logout(username, formerToken, expireTime);
+            }
+        }
+        userMapper.updateAdmin(username, ipAddress, token, expireTime);
+    }
+
+    /**
+     *
+     * @Description 用户登出，注销令牌
+     * @param token 令牌
+     * @author Quan Li 2024/7/5 16:24
+     **/
     public void logout(String token){
         Claims claims = JWTHelper.jwtUnpack(token);
         String username = claims.get("username", String.class);
         Date date = new Date(System.currentTimeMillis() + 24 * 3600 * 1000L);
+        if(userMapper.checkLogout(token) == 1) return;
         userMapper.logout(username, token, date);
     }
 
-    public String getEmail(String username){
-        return userMapper.getEmail(username);
-    }
 }

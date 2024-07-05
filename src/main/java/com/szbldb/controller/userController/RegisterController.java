@@ -24,6 +24,13 @@ public class RegisterController {
         this.registerService = registerService;
     }
 
+    /**
+     *
+     * @Description 检查注册用户名，并发送邮件验证码
+     * @param userPojo 用户注册信息
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:48
+     **/
     @RequestMapping(value = "/PETdatabase/register/checkUserInfo")
     public Result checkUsername(@RequestBody UserPojo userPojo){
         String username = userPojo.getUsername(), password = userPojo.getPassword(), email = userPojo.getEmail();
@@ -47,6 +54,13 @@ public class RegisterController {
             return Result.error("Failed to send code. Please check the email.");
     }
 
+    /**
+     *
+     * @Description 检查验证码，并生成令牌
+     * @param codePojo 验证码信息
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:49
+     **/
     @RequestMapping(value = "/PETdatabase/register/checkCode")
     public Result checkCode(@RequestBody UserPojo codePojo){
         String jwtCode = codePojo.getJwtCode();

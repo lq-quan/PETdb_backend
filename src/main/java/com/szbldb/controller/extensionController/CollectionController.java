@@ -20,6 +20,14 @@ public class CollectionController {
         this.collectionService = collectionService;
     }
 
+    /**
+     *
+     * @Description 创建 Collection
+     * @param token 用户令牌
+     * @param collection 新建 Collection 信息
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:26
+     **/
     @RequestMapping("/PETdatabase/extended/collection/create")
     public Result createCollection(@RequestHeader String token, @RequestBody Collection collection){
         String username = JWTHelper.getUsername(token);
@@ -32,6 +40,13 @@ public class CollectionController {
         return Result.success(cid);
     }
 
+    /**
+     *
+     * @Description 列出用户创建的 Collection
+     * @param token 用户令牌
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:26
+     **/
     @RequestMapping("/PETdatabase/extended/collection/list")
     public Result getCollectionList(@RequestHeader String token){
         String username = JWTHelper.getUsername(token);
@@ -39,6 +54,14 @@ public class CollectionController {
         return Result.success(list);
     }
 
+    /**
+     *
+     * @Description 获取 Collection 具体内容
+     * @param token 用户令牌
+     * @param collectionId Collection id
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:27
+     **/
     @RequestMapping("/PETdatabase/extended/collection/detail")
     public Result getCollectionDetail(@RequestHeader String token, Integer collectionId){
         String username = JWTHelper.getUsername(token);
@@ -50,6 +73,14 @@ public class CollectionController {
         }
     }
 
+    /**
+     *
+     * @Description 删除 Collection
+     * @param token 用户令牌
+     * @param collectionId Collection id
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:28
+     **/
     @RequestMapping("/PETdatabase/extended/collection/delete")
     public Result deleteColl(@RequestHeader String token, Integer collectionId){
         String username = JWTHelper.getUsername(token);
@@ -63,6 +94,15 @@ public class CollectionController {
         return Result.success();
     }
 
+    /**
+     *
+     * @Description 添加数据集到 Collection
+     * @param token 用户令牌
+     * @param collectionId Collection id
+     * @param datasetId 数据集 id
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:29
+     **/
     @RequestMapping("/PETdatabase/extended/collection/add")
     public Result addDatasetToColl(@RequestHeader String token, Integer collectionId, Integer datasetId){
         String username = JWTHelper.getUsername(token);
@@ -74,6 +114,15 @@ public class CollectionController {
         return Result.success();
     }
 
+    /**
+     *
+     * @Description 从 Collection 中移除数据集
+     * @param token 用户令牌
+     * @param collectionId Collection id
+     * @param datasetId 数据集 id
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:29
+     **/
     @RequestMapping("/PETdatabase/extended/collection/remove")
     public Result deleteDatasetFromColl(@RequestHeader String token, Integer collectionId, Integer datasetId){
         String username = JWTHelper.getUsername(token);

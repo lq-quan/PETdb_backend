@@ -45,4 +45,14 @@ public interface UserMapper {
 
     @Update("update userinfo set avatar = #{avatar} where id = #{id}")
     void changeAvatarById(Integer id, String avatar);
+
+    @Update("update admins set ip_address = #{ipAddress}, cur_token = #{token}, expire_time = #{expireTime}" +
+            " where username = #{username}")
+    void updateAdmin(String username, String ipAddress, String token, Date expireTime);
+
+    @Select("select ip_address from admins where username = #{username}")
+    String checkIpAddrOfAdmin(String username);
+
+    @Select("select cur_token from admins where username = #{username}")
+    String checkTokenOfAdmin(String username);
 }

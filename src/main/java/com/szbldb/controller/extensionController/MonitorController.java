@@ -17,6 +17,12 @@ public class MonitorController {
         this.monitorService = monitorService;
     }
 
+    /**
+     *
+     * @Description 无参方法，获取流量信息
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 15:31
+     **/
     @RequestMapping("/PETdatabase/extended/admin/monitor")
     public Result monitor(){
         MonitorRes res = monitorService.getMonitorInfo();

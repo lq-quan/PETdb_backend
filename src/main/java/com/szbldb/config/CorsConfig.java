@@ -20,6 +20,7 @@ public class CorsConfig {
         corsConfiguration.addAllowedHeader("*");
         /*允许访问的方法名,GET POST等*/
         corsConfiguration.addAllowedMethod("*");
+        /*允许访问的路径*/
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
         return new CorsFilter(urlBasedCorsConfigurationSource);
     }

@@ -1,5 +1,6 @@
 package com.szbldb.controller.datasetController;
 
+import com.szbldb.exception.DataSetException;
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.datasetPojo.DataSet;
 import com.szbldb.pojo.datasetPojo.DataSetList;
@@ -20,12 +21,24 @@ public class DataSetController {
         this.dataSetService = dataSetService;
     }
 
+    /**
+     *
+     * @param dataInfo 待搜索的数据集信息
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 10:51
+     **/
     @RequestMapping("/PETdatabase/dataset/list")
     public Result searchList(DataSet dataInfo){
         DataSetList dataSetList = dataSetService.searchList(dataInfo);
         return Result.success(dataSetList);
     }
 
+    /**
+     *
+     * @param word 待搜索的数据集关键词
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 10:52
+     **/
     @RequestMapping("/PETdatabase/dataset/list/searchGlobal")
     public Result globalSearch(String word){
         System.out.println("global search:" + word);
@@ -33,13 +46,26 @@ public class DataSetController {
         return Result.success(dataSetList);
     }
 
+    /**
+     *
+     * @param id 要查看的数据集 id
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 10:53
+     **/
     @RequestMapping("/PETdatabase/dataset/detail")
     public Result getDetail(Integer id){
         DataSet dataSet = dataSetService.getDetail(id);
         return Result.success(dataSet);
     }
 
-    @RequestMapping("/PETdatabase/dataset/deleteFile")
+    /**
+     *
+     *
+     * @param id 待删除的文件 id
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 10:53
+     **/
+    @RequestMapping("/PETdatabase/dataset/manage/deleteFile")
     public Result deleteFile(Integer id){
         try {
             dataSetService.deleteFile(id);
@@ -49,11 +75,18 @@ public class DataSetController {
         return Result.success();
     }
 
-    @RequestMapping("/PETdatabase/dataset/delete")
+    /**
+     *
+     *
+     * @param id 待删除的数据集 id
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/4 10:54
+     **/
+    @RequestMapping("/PETdatabase/dataset/manage/delete")
     public Result deleteDataset(Integer id){
         try{
             dataSetService.deleteDataset(id);
-        }catch (RuntimeException e){
+        }catch (DataSetException e){
             return Result.error("failed to delete. The dataset might not be empty", 40009);
         }catch (Exception e){
             log.error("删除数据集失败", e);

@@ -34,16 +34,28 @@ public class MailHelper {
         mailSender = initSender;
     }
 
+    /**
+     *
+     * @Description 发送邮件
+     * @param email 邮箱账户
+     * @return java.lang.String
+     * @author Quan Li 2024/7/5 16:42
+     **/
     public static String sendEmail(String email){
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setSubject(subject);
         StringBuilder code = new StringBuilder();
+        int last = -1;
+        int[] rec = new int[10];
         for(int i = 0; i < 6; i++){
-            int next = random.nextInt(0, 36);
-            if(next < 10)
+            int next = random.nextInt(0, 10);
+            if(next == last || rec[next] == 2)
+                i--;
+            else{
                 code.append(next);
-            else
-                code.append((char)('A' + next - 10));
+                rec[next]++;
+                last = next;
+            }
         }
         mail.setText(content1 + code + content2);
         mail.setTo(email);
@@ -54,17 +66,32 @@ public class MailHelper {
             log.error("邮件发送失败", e);
             return null;
         }
-        System.out.println("邮件发送完毕！");
+        System.out.println("邮件发送完毕！To: " + email);
         System.out.println(code);
-        return digestMD5(code.toString());
+        return digestSha256(code.toString());
     }
 
-    public static String digestMD5(String code){//get encoded string of code by md5
-        return DigestUtils.md5Hex(code);
+    /**
+     *
+     * @Description 将字符串进行 SHA256 加密
+     * @param code 指定字符串
+     * @return java.lang.String
+     * @author Quan Li 2024/7/5 16:42
+     **/
+    public static String digestSha256(String code){//get encoded string of code by md5
+        return DigestUtils.sha256Hex(code);
     }
 
+    /**
+     *
+     * @Description 解析令牌并检查验证码正确性
+     * @param jwtCode 令牌
+     * @param code 验证码
+     * @return boolean
+     * @author Quan Li 2024/7/5 16:42
+     **/
     public static boolean verifyCode(String jwtCode, String code){
-        String check = digestMD5(code);
+        String check = digestSha256(code);
         Claims claims;
         try{
             claims = JWTHelper.jwtUnpack(jwtCode);

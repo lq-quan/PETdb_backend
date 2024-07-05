@@ -45,6 +45,13 @@ public class DataSetService {
         this.dataSetMapper = dataSetMapper;
     }
 
+    /**
+     *
+     * @Description 根据数据集信息搜索列表
+     * @param dataSet 数据集信息
+     * @return com.szbldb.pojo.datasetPojo.DataSetList
+     * @author Quan Li 2024/7/5 10:58
+     **/
     @Transactional(rollbackFor = Exception.class)
     public DataSetList searchList(DataSet dataSet){
         List<DataSet> dataSets = dataSetMapper.searchLike(dataSet);
@@ -54,6 +61,13 @@ public class DataSetService {
         return new DataSetList(dataSets.size(), dataSets);
     }
 
+    /**
+     *
+     * @Description 根据关键词搜索列表
+     * @param word 关键词
+     * @return com.szbldb.pojo.datasetPojo.DataSetList
+     * @author Quan Li 2024/7/5 11:00
+     **/
     @Transactional(rollbackFor = Exception.class)
     public DataSetList searchAllLike(String word){
         List<DataSet> dataSets = dataSetMapper.searchGlobal(word);
@@ -63,6 +77,13 @@ public class DataSetService {
         return new DataSetList(dataSets.size(), dataSets);
     }
 
+    /**
+     *
+     * @Description 获取数据集具体内容
+     * @param id 数据集 id
+     * @return com.szbldb.pojo.datasetPojo.DataSet
+     * @author Quan Li 2024/7/5 11:00
+     **/
     @Transactional(rollbackFor = Exception.class)
     public DataSet getDetail(Integer id){
         DataSet dataSet = dataSetMapper.getDatasetById(id);
@@ -71,6 +92,12 @@ public class DataSetService {
         return dataSet;
     }
 
+    /**
+     *
+     * @Description 删除指定文件
+     * @param fileId 文件 id
+     * @author Quan Li 2024/7/5 11:01
+     **/
     @Transactional(rollbackFor = Exception.class)// 设置isolation = Isolation.SERIALIZABLE，可阻止事务并行
     public void deleteFile(Integer fileId) throws DataSetException{
         File deletedFile = dataSetMapper.getFileByFileId(fileId);
@@ -125,6 +152,12 @@ public class DataSetService {
         }
     }
 
+    /**
+     *
+     * @Description 删除指定非空数据集
+     * @param id 数据集 id
+     * @author Quan Li 2024/7/5 11:03
+     **/
     @Transactional(rollbackFor = Exception.class)
     public void deleteDataset(Integer id) throws Exception{
         System.out.println("Deleted dataset: " + id);
@@ -134,7 +167,7 @@ public class DataSetService {
         Integer fileNums = dataSetMapper.getFileNums(id);
         if(fileNums > 0){
             logService.addLog("失败：删除数据集 " + dataSet.getName());
-            throw new RuntimeException("Dataset not empty!");
+            throw new DataSetException("Dataset not empty!");
         }
         dataSetMapper.deleteAllFilesOfDataset(id);
         dataSetMapper.deleteDatasetLoc(id);

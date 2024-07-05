@@ -49,6 +49,13 @@ public class DataDownloadService {
         this.dataSetMapper = dataSetMapper;
     }
 
+    /**
+     *
+     * @Description 返回 OSS 文件下载链接
+     * @param fileId 文件 id
+     * @return java.net.URL
+     * @author Quan Li 2024/7/5 10:54
+     **/
     @Transactional(rollbackFor = Exception.class)
     public URL dataDownload(Integer fileId){
         DataSetLoc dataSetLoc = dataSetMapper.searchLocByFileId(fileId);
@@ -77,6 +84,13 @@ public class DataDownloadService {
         return null;
     }
 
+    /**
+     *
+     * @Description 返回本地文件下载链接
+     * @param id 文件 id
+     * @return java.lang.String
+     * @author Quan Li 2024/7/5 10:56
+     **/
     @Transactional(rollbackFor = Exception.class)
     public String downloadLocal(Integer id){
         DataSetLoc loc = dataSetMapper.searchLocByFileId(id);
@@ -107,6 +121,13 @@ public class DataDownloadService {
         return url;
     }
 
+    /**
+     *
+     * @Description 返回多个文件压缩包
+     * @param fileIDs 文件 id 列表
+     * @return org.springframework.http.ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody>
+     * @author Quan Li 2024/7/5 10:57
+     **/
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<StreamingResponseBody> createZip(List<Integer> fileIDs){
         DataSet dataSet = dataSetMapper.getDatasetByFileId(fileIDs.get(0));

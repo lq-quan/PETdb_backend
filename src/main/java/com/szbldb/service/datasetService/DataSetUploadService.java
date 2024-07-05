@@ -52,6 +52,12 @@ public class DataSetUploadService {
         this.dataSetMapper = dataSetMapper;
     }
 
+    /**
+     * 
+     * @Description 无参方法，获取STSToken，上传文件到 OSS
+     * @return com.szbldb.pojo.datasetPojo.StsTokenInfo
+     * @author Quan Li 2024/7/5 11:09
+     **/
     public StsTokenInfo datasetUpload(){
         String endpoint = "sts.cn-shenzhen.aliyuncs.com";
         String accessKeyId = System.getenv("OSS_ACCESS_KEY_ID");
@@ -99,6 +105,13 @@ public class DataSetUploadService {
         return null;
     }
 
+    /**
+     * 
+     * @Description 创建新的空数据集
+     * @param dataSet 新建数据集信息
+     * @return boolean
+     * @author Quan Li 2024/7/5 11:11
+     **/
     @Transactional(rollbackFor = Exception.class)
     public boolean uploadMeta(DataSet dataSet) throws Exception{
         if(dataSetMapper.checkDatasetName(dataSet.getName(), dataSet.getType()) != null) return false;
@@ -142,11 +155,24 @@ public class DataSetUploadService {
         return true;
     }
 
+    /**
+     * 
+     * @Description 修改数据集信息
+     * @param dataSet 新数据集信息
+     * @author Quan Li 2024/7/5 11:14
+     **/
     public void changeMeta(DataSet dataSet){
         dataSet.setDate(LocalDate.now());
         dataSetMapper.updateDatasetById(dataSet);
     }
 
+    /**
+     *
+     * @Description 上传文件元数据
+     * @param file 文件元数据信息
+     * @return boolean
+     * @author Quan Li 2024/7/5 11:14
+     **/
     @Transactional(rollbackFor = Exception.class)
     public boolean uploadFile(File file) throws PessimisticLockingFailureException {
         if(dataSetMapper.checkFilename(file.getName(), file.getDatasetId()) != null) return false;
@@ -156,6 +182,14 @@ public class DataSetUploadService {
         return true;
     }
 
+    /**
+     *
+     * @Description 检查上传文件的信息
+     * @param uploaded 用于存放已上传的文件分片列表
+     * @param part 文件信息，文件名/MD5等
+     * @return java.lang.Boolean
+     * @author Quan Li 2024/7/5 11:16
+     **/
     @Transactional(rollbackFor = Exception.class)
     public Boolean checkMd5(List<Integer> uploaded, FilePart part){
         String md5 = part.getFileMd5();
@@ -212,6 +246,13 @@ public class DataSetUploadService {
         return true;
     }
 
+    /**
+     *
+     * @Description 上传文件分片，返回上传链接列表
+     * @param part 文件以及分片信息
+     * @return java.util.List<java.lang.String>
+     * @author Quan Li 2024/7/5 11:20
+     **/
     //@Transactional(rollbackFor = Exception.class)
     public List<String> uploadLocal(FilePart part){
         System.out.println(part);
@@ -243,6 +284,12 @@ public class DataSetUploadService {
         return list;
     }
 
+    /**
+     *
+     * @Description 合并文件
+     * @param part 需要合并文件的信息，文件名/MD5等
+     * @author Quan Li 2024/7/5 11:26
+     **/
     @Async
     @Transactional(rollbackFor = Exception.class)
     public void mergeFile(FilePart part){
@@ -284,7 +331,7 @@ public class DataSetUploadService {
                             .bucket(bucket)
                             .object(object)
                             .build());
-                    throw new RuntimeException("Md5对比失败");
+                    throw new DataSetException("Md5对比失败");
                 }
             }
             StatObjectResponse args = client.statObject(StatObjectArgs.builder().bucket(bucket).object(object).build());

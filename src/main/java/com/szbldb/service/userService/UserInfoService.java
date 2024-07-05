@@ -27,6 +27,13 @@ public class UserInfoService {
         this.userMapper = userMapper;
     }
 
+    /**
+     *
+     * @Description 获取用户信息
+     * @param jwtUser 用户令牌
+     * @return com.szbldb.pojo.userInfoPojo.UserInfo
+     * @author Quan Li 2024/7/5 16:26
+     **/
     public UserInfo getUserInfo(String jwtUser){
         String username = JWTHelper.getUsername(jwtUser);
         Integer id = userMapper.getIdByName(username);
@@ -49,6 +56,13 @@ public class UserInfoService {
         return info;
     }
 
+    /**
+     *
+     * @Description 修改用户信息
+     * @param token 用户令牌
+     * @param userInfo 修改后的信息
+     * @author Quan Li 2024/7/5 16:27
+     **/
     public void changeInfo(String token, UserInfo userInfo){
         String username = JWTHelper.getUsername(token);
         Integer id = userMapper.getIdByName(username);
@@ -56,12 +70,27 @@ public class UserInfoService {
         userMapper.changeUserInfo(userInfo);
     }
 
+    /**
+     *
+     * @Description 获取用户邮箱
+     * @param token 用户令牌
+     * @return java.lang.String
+     * @author Quan Li 2024/7/5 16:27
+     **/
     public String getEmail(String token){
         String username = JWTHelper.getUsername(token);
         return userMapper.getEmail(username);
     }
 
 
+    /**
+     *
+     * @Description 用户上传头像
+     * @param token 用户令牌
+     * @param avatar 头像文件用户名
+     * @return java.lang.String
+     * @author Quan Li 2024/7/5 16:27
+     **/
     @Transactional(rollbackFor = Exception.class)
     public String uploadAvatar(String token, String avatar) throws Exception {
         String username = JWTHelper.getUsername(token);

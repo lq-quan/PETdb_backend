@@ -21,12 +21,26 @@ public class LogService {
         this.logsMapper = logsMapper;
     }
 
+    /**
+     *
+     * @Description 添加操作记录
+     * @param operation 操作内容
+     * @author Quan Li 2024/7/5 16:20
+     **/
     public void addLog(String operation){
         Operation op = new Operation(LocalDateTime.now(), operation);
         op.setOperator(user);
         logsMapper.insertLog(op);
     }
 
+    /**
+     *
+     * @Description 获取操作记录列表
+     * @param page （第）页数
+     * @param limit 每页项数
+     * @return com.szbldb.pojo.logPojo.LogRes
+     * @author Quan Li 2024/7/5 16:20
+     **/
     public LogRes getLogs(Integer page, Integer limit){
         LogRes res = new LogRes();
         res.setLogs(logsMapper.getLogs((page - 1) * limit, limit));

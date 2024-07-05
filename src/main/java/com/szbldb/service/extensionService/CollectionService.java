@@ -22,6 +22,14 @@ public class CollectionService {
         this.extensionMapper = extensionMapper;
     }
 
+    /**
+     *
+     * @Description 创建 Collection
+     * @param username 用户名
+     * @param collection Collection 信息
+     * @return java.lang.Integer
+     * @author Quan Li 2024/7/5 15:49
+     **/
     @Transactional
     public Integer createCollection(String username, Collection collection){
         collection.setCreateTime(LocalDateTime.now());
@@ -33,6 +41,13 @@ public class CollectionService {
         return collection.getId();
     }
 
+    /**
+     *
+     * @Description 获取 Collection 列表
+     * @param username 用户名
+     * @return com.szbldb.pojo.extensionPojo.CollectionList
+     * @author Quan Li 2024/7/5 15:50
+     **/
     public CollectionList getCollectionList(String username){
         List<Collection> items = extensionMapper.getCollectionList(username);
         CollectionList list = new CollectionList();
@@ -41,6 +56,14 @@ public class CollectionService {
         return list;
     }
 
+    /**
+     *
+     * @Description 获取指定 Collection 内容
+     * @param cid Collection id
+     * @param username 用户名
+     * @return com.szbldb.pojo.extensionPojo.Collection
+     * @author Quan Li 2024/7/5 15:50
+     **/
     @Transactional(rollbackFor = Exception.class)
     public Collection getCollectionDetail(Integer cid, String username) throws ExtensionException {
         if(extensionMapper.checkIfUserColl(username, cid) != 1){
@@ -55,6 +78,14 @@ public class CollectionService {
         return collection;
     }
 
+    /**
+     *
+     * @Description 删除指定 Collection
+     * @param cid Collection id
+     * @param username 用户名
+     * @return boolean
+     * @author Quan Li 2024/7/5 15:52
+     **/
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteCollection(Integer cid, String username) throws ExtensionException {
         if(extensionMapper.checkIfUserColl(username, cid) != 1){
@@ -67,6 +98,14 @@ public class CollectionService {
         return true;
     }
 
+    /**
+     *
+     * @Description 在指定 Collection 中加入指定数据集
+     * @param did 数据集 id
+     * @param cid Collection id
+     * @param username 用户名
+     * @author Quan Li 2024/7/5 15:52
+     **/
     @Transactional(rollbackFor = Exception.class)
     public void addDatasetToCollection(Integer did, Integer cid, String username) throws ExtensionException {
         if(extensionMapper.checkIfUserColl(username, cid) != 1){
@@ -77,6 +116,14 @@ public class CollectionService {
         extensionMapper.insertDatasetToColl(did, cid);
     }
 
+    /**
+     *
+     * @Description 删除指定 Collection 中的指定数据集
+     * @param did 数据集 id
+     * @param cid Collection id
+     * @param username 用户名
+     * @author Quan Li 2024/7/5 15:53
+     **/
     @Transactional(rollbackFor = Exception.class)
     public void deleteDatasetFromCollection(Integer did, Integer cid, String username) throws ExtensionException {
         if(extensionMapper.checkIfUserColl(username, cid) != 1){
