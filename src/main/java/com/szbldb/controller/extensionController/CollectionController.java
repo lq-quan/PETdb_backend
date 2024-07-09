@@ -7,10 +7,7 @@ import com.szbldb.pojo.extensionPojo.CollectionList;
 import com.szbldb.service.extensionService.CollectionService;
 import com.szbldb.util.JWTHelper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class CollectionController {
@@ -28,7 +25,7 @@ public class CollectionController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:26
      **/
-    @RequestMapping("/PETdatabase/extended/collection/create")
+    @PostMapping("/PETdatabase/extended/collection/create")
     public Result createCollection(@RequestHeader String token, @RequestBody Collection collection){
         String username = JWTHelper.getUsername(token);
         Integer cid;
@@ -47,7 +44,7 @@ public class CollectionController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:26
      **/
-    @RequestMapping("/PETdatabase/extended/collection/list")
+    @GetMapping("/PETdatabase/extended/collection/list")
     public Result getCollectionList(@RequestHeader String token){
         String username = JWTHelper.getUsername(token);
         CollectionList list = collectionService.getCollectionList(username);
@@ -62,7 +59,7 @@ public class CollectionController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:27
      **/
-    @RequestMapping("/PETdatabase/extended/collection/detail")
+    @GetMapping("/PETdatabase/extended/collection/detail")
     public Result getCollectionDetail(@RequestHeader String token, Integer collectionId){
         String username = JWTHelper.getUsername(token);
         try {
@@ -81,7 +78,7 @@ public class CollectionController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:28
      **/
-    @RequestMapping("/PETdatabase/extended/collection/delete")
+    @DeleteMapping("/PETdatabase/extended/collection/delete")
     public Result deleteColl(@RequestHeader String token, Integer collectionId){
         String username = JWTHelper.getUsername(token);
         try {
@@ -103,15 +100,20 @@ public class CollectionController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:29
      **/
-    @RequestMapping("/PETdatabase/extended/collection/add")
+    @PostMapping("/PETdatabase/extended/collection/add")
     public Result addDatasetToColl(@RequestHeader String token, Integer collectionId, Integer datasetId){
         String username = JWTHelper.getUsername(token);
         try {
-            collectionService.addDatasetToCollection(datasetId, collectionId, username);
+            Integer add = collectionService.addDatasetToCollection(datasetId, collectionId, username);
+            return switch (add) {
+                case 0 -> Result.success();
+                case 1 -> Result.error("数据集不存在", 60005);
+                case 2 -> Result.error("数据集已添加过", 60005);
+                default -> Result.error("Collection已满", 60004);
+            };
         } catch (ExtensionException e) {
             return Result.error("访问Collection失败", 60001);
         }
-        return Result.success();
     }
 
     /**
@@ -123,7 +125,7 @@ public class CollectionController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:29
      **/
-    @RequestMapping("/PETdatabase/extended/collection/remove")
+    @DeleteMapping("/PETdatabase/extended/collection/remove")
     public Result deleteDatasetFromColl(@RequestHeader String token, Integer collectionId, Integer datasetId){
         String username = JWTHelper.getUsername(token);
         try {

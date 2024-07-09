@@ -3,8 +3,10 @@ package com.szbldb.service.userService;
 import com.szbldb.dao.UserMapper;
 import com.szbldb.exception.UserException;
 import com.szbldb.pojo.userPojo.User;
+import com.szbldb.service.logService.LogService;
 import com.szbldb.util.JWTHelper;
 import io.jsonwebtoken.Claims;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +18,12 @@ import java.util.Date;
 public class LoginService {
 
     private final UserMapper userMapper;
+    private final LogService logService;
 
-    public LoginService(@Autowired UserMapper userMapper) {
+    @Autowired
+    public LoginService(UserMapper userMapper, LogService logService) {
         this.userMapper = userMapper;
+        this.logService = logService;
     }
 
     /**
@@ -32,7 +37,8 @@ public class LoginService {
     public boolean check(String username, String password) throws UserException{
         User user = userMapper.getUserByUsername(username);
         if(user == null) return false;
-        boolean correctOrNot = user.getPassword().equals(password);
+        String hashPsw = user.getPassword();
+        boolean correctOrNot = BCrypt.checkpw(password, hashPsw);
         if(correctOrNot && "admin".equals(userMapper.getRolesByUsername(username)))
             throw new UserException("检测到管理员登录：" + username);
         return correctOrNot;
@@ -46,15 +52,10 @@ public class LoginService {
      * @param token 令牌
      * @author Quan Li 2024/7/5 16:23
      **/
-    @Transactional(rollbackFor = Exception.class)
+    //@Transactional(rollbackFor = Exception.class)
     public void updateAdmin(String username, String ipAddress, String token){
-        String formerToken = userMapper.checkTokenOfAdmin(username);
+        logService.addLog("成功：管理员 " + username + " 登录");
         Date expireTime = new Date(System.currentTimeMillis() + 24 * 3600 * 1000L);
-        if(!token.equals(formerToken)){
-            if(userMapper.checkLogout(token) != 1){
-                userMapper.logout(username, formerToken, expireTime);
-            }
-        }
         userMapper.updateAdmin(username, ipAddress, token, expireTime);
     }
 

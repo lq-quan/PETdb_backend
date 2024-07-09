@@ -43,26 +43,38 @@ public interface ExtensionMapper {
             "where user.username = #{username} and collection.id = #{cid}")
     Integer checkIfUserColl(String username, Integer cid);
 
+    @Select("select count(cid) from coll_dset where cid = #{cid} and did = #{did}")
+    Integer checkIfDsetInColl(Integer did, Integer cid);
+
     @Results({
             @Result(property = "createTime", column = "create_time")
     })
     @Select("select * from collection inner join user on collection.uid = user.id and user.username = #{username}")
     List<Collection> getCollectionList(String username);
 
-    @Select("select d.id, d.name, type from dataset d inner join coll_dset c on c.did = d.id and c.cid = #{cid}")
+    @Results({
+            @Result(column = "did", property = "id"),
+            @Result(column = "dataset_name", property = "name"),
+            @Result(column = "status", property = "status")
+    })
+    @Select("select did, dataset_name, status from coll_dset where cid = #{cid}")
     List<DataSet> getDatasetInColl(Integer cid);
 
     @Select("select count(*) from coll_dset where cid = #{cid}")
     Integer getDSetCountInColl(Integer cid);
 
+    @Select("select status, name from dataset where id = #{did}")
+    DataSet checkDataset(Integer did);
+
     @Delete("delete from collection where id = #{cid} " +
             "and uid in (select id as uid from user where username = #{username})")
     void deleteColl(Integer cid, String username);
 
-    @Insert("insert into coll_dset (cid, did) value (#{cid}, #{did})")
-    void insertDatasetToColl(Integer did, Integer cid);
+    @Insert("insert into coll_dset (cid, did, status, dataset_name) value (#{cid}, #{did}, #{status}, #{datasetName})")
+    void insertDatasetToColl(Integer did, Integer cid, String status, String datasetName);
 
 
     @Delete("delete from coll_dset where cid = #{cid} and did = #{did}")
     void deleteDatasetFromColl(Integer did, Integer cid);
+
 }

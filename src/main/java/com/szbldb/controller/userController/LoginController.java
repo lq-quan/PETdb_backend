@@ -11,11 +11,9 @@ import com.szbldb.util.MailHelper;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +35,7 @@ public class LoginController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:45
      **/
-    @RequestMapping("/PETdatabase/user/login")
+    @PostMapping("/PETdatabase/user/login")
     public Result login(@RequestBody User user) {
         String username = user.getUsername();
         String password = user.getPassword();
@@ -49,9 +47,9 @@ public class LoginController {
             else
                 return Result.error("Invalid username or incorrect password!", 60204);
         }catch (UserException e){
-            log.info("检测到管理员登录：" + username, e);
+            log.info("检测到管理员登录：" + username);
             //String code = MailHelper.sendEmail(loginService.getEmail(username));
-            String code = "123456";
+            String code = DigestUtils.sha256Hex("123456" + username);
             if(code != null) {
                 Map<String, Object> map = new HashMap<>();
                 map.put("code", code);
@@ -75,7 +73,7 @@ public class LoginController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:46
      **/
-    @RequestMapping("/PETdatabase/user/login/checkAdmin")
+    @PostMapping("/PETdatabase/user/login/checkAdmin")
     public Result checkAdminLogin(@RequestBody UserPojo codePojo, HttpServletRequest request){
         String jwtCode = codePojo.getJwtCode();
         String code = codePojo.getCode();
@@ -89,6 +87,7 @@ public class LoginController {
         if(MailHelper.verifyCode(jwtCode, code)) {
             UserPojo userPojo = JWTHelper.generateUserPojo(username);
             loginService.updateAdmin(username, ipAddress, userPojo.getJwtUser());
+            log.info("管理员 " + username + " 成功登录，IP：" + ipAddress);
             return Result.success(userPojo);
         }
         log.warn("管理员输入错误验证码：" + codePojo.getUsername());
@@ -102,7 +101,7 @@ public class LoginController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:47
      **/
-    @RequestMapping("/PETdatabase/user/logout")
+    @PostMapping("/PETdatabase/user/logout")
     public Result logout(@RequestHeader String token){
         loginService.logout(token);
         return Result.success(true);

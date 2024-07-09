@@ -81,4 +81,7 @@ public interface DataSetMapper {
     @Delete("delete from dataset where id = #{id}")
     void deleteDataset(Integer id);
 
+    @Update("update coll_dset set status = 'deleted' where did = #{id}")
+    void deleteCollDset(Integer id);
+
 }

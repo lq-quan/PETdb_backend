@@ -47,6 +47,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/PETdatabase/extended/admin/**")
                 .addPathPatterns("/PETdatabase/dataset/manage/**")
                 .addPathPatterns("/PETdatabase/logs");
-        registry.addInterceptor(licenseCheckInterceptor).addPathPatterns("/PETdatabase/dataset/download*");
+        registry.addInterceptor(licenseCheckInterceptor).addPathPatterns("/PETdatabase/dataset/download")
+                .addPathPatterns("/PETdatabase/dataset/downloadZip");
     }
 }

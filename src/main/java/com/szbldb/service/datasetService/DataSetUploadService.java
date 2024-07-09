@@ -1,18 +1,5 @@
 package com.szbldb.service.datasetService;
 
-import com.aliyun.oss.OSS;
-import com.aliyun.oss.OSSClientBuilder;
-import com.aliyun.oss.OSSException;
-import com.aliyun.oss.common.auth.CredentialsProviderFactory;
-import com.aliyun.oss.common.auth.EnvironmentVariableCredentialsProvider;
-import com.aliyun.oss.model.PutObjectRequest;
-import com.aliyuncs.DefaultAcsClient;
-import com.aliyuncs.auth.sts.AssumeRoleRequest;
-import com.aliyuncs.auth.sts.AssumeRoleResponse;
-import com.aliyuncs.exceptions.ClientException;
-import com.aliyuncs.http.MethodType;
-import com.aliyuncs.profile.DefaultProfile;
-import com.aliyuncs.profile.IClientProfile;
 import com.szbldb.dao.DataSetMapper;
 import com.szbldb.exception.DataSetException;
 import com.szbldb.pojo.datasetPojo.*;
@@ -58,7 +45,7 @@ public class DataSetUploadService {
      * @return com.szbldb.pojo.datasetPojo.StsTokenInfo
      * @author Quan Li 2024/7/5 11:09
      **/
-    public StsTokenInfo datasetUpload(){
+    /*public StsTokenInfo datasetUpload(){
         String endpoint = "sts.cn-shenzhen.aliyuncs.com";
         String accessKeyId = System.getenv("OSS_ACCESS_KEY_ID");
         String accessKeySecret = System.getenv("OSS_ACCESS_KEY_SECRET");
@@ -103,7 +90,7 @@ public class DataSetUploadService {
             log.error("failed to access OSS", e);
         }
         return null;
-    }
+    }*/
 
     /**
      * 
@@ -113,7 +100,7 @@ public class DataSetUploadService {
      * @author Quan Li 2024/7/5 11:11
      **/
     @Transactional(rollbackFor = Exception.class)
-    public boolean uploadMeta(DataSet dataSet) throws Exception{
+    public boolean uploadMeta(DataSet dataSet){
         if(dataSetMapper.checkDatasetName(dataSet.getName(), dataSet.getType()) != null) return false;
         dataSet.setDate(LocalDate.now());
         dataSet.setSize(0L);
@@ -121,13 +108,11 @@ public class DataSetUploadService {
         DataSetLoc dataSetLoc = new DataSetLoc();
         dataSetLoc.setId(dataSet.getId());
         dataSetLoc.setObjectName(dataSet.getType() + '/' + dataSet.getName() + '/');
-        if("local".equals(dataSet.getStatus())){
-            dataSetLoc.setBucketName(bucket);
-            dataSetMapper.insertLoc(dataSetLoc);
-            logService.addLog("成功：创建数据集 " + dataSet.getName());
-            return true;
-        }
-        dataSetLoc.setBucketName("szbldb-test");
+        dataSetLoc.setBucketName(bucket);
+        dataSetMapper.insertLoc(dataSetLoc);
+        logService.addLog("成功：创建数据集 " + dataSet.getName());
+        return true;
+        /*dataSetLoc.setBucketName("szbldb-test");
         dataSetMapper.insertLoc(dataSetLoc);
         //创建OSS目录
         String endpoint = "https://oss-cn-shenzhen.aliyuncs.com";
@@ -152,7 +137,7 @@ public class DataSetUploadService {
                 ossClient.shutdown();
             }
         }
-        return true;
+        return true;*/
     }
 
     /**
@@ -184,7 +169,7 @@ public class DataSetUploadService {
 
     /**
      *
-     * @Description 检查上传文件的信息
+     * @Description 检查上传文件的信息，返回值：false-文件未上传过但可以上传；true-文件已上传过并且 copy 成功；null-文件上传出错，无法上传
      * @param uploaded 用于存放已上传的文件分片列表
      * @param part 文件信息，文件名/MD5等
      * @return java.lang.Boolean
@@ -197,20 +182,19 @@ public class DataSetUploadService {
         DataSet toDataset = dataSetMapper.getDatasetById(part.getId());
         if(dataSetMapper.checkFilename(part.getFileName(), part.getId()) != null) return null;
         //尝试寻找分片
-        int flag = 0;
         if(origin == null){
             String object = toDataset.getType() + "/" + toDataset.getName() + "/" + part.getFileMd5();
             try(MinioClient client = MinioClient.builder()
                     .endpoint("http://" + ipAddress + ":9000")
                     .credentials("lqquan", "12345678")
                     .build()){
-                int i = 0;
+                int i = 1;
                 while(true){
                     try{
                         client.statObject(StatObjectArgs.builder().bucket(bucket).object(object + "." + i).build());
                         uploaded.add(i++);
                     }catch (ErrorResponseException ee){
-                        if(flag++ == 2) break;
+                        break;
                     }
                 }
             }catch (Exception e){
@@ -241,7 +225,9 @@ public class DataSetUploadService {
             }
         }
         origin.setDatasetId(part.getId());
-        uploadFile(origin);
+        if(!uploadFile(origin)){
+            return null;
+        }
         logService.addLog("成功：向 " + toDataset.getName() + " 上传 " + part.getFileName());
         return true;
     }
@@ -265,7 +251,7 @@ public class DataSetUploadService {
                 .build()){
             long chunkCount = part.getFileSize() / part.getChunkSize() + 1;
             if(part.getFileSize() % part.getChunkSize() == 0) chunkCount--;
-            for(int i = 0; i < chunkCount; i++){
+            for(int i = 1; i <= chunkCount; i++){
                 try{
                     client.statObject(StatObjectArgs.builder().bucket(bucket).object(object + "." + i).build());
                 }catch (ErrorResponseException e){
@@ -302,7 +288,7 @@ public class DataSetUploadService {
                 .credentials("lqquan", "12345678")
                 .build()){
             List<ComposeSource> sources = new ArrayList<>();
-            int i = 0;
+            int i = 1;
             while(true){
                 try{
                     client.statObject(StatObjectArgs.builder().bucket(bucket).object(object + "." + i).build());
@@ -317,7 +303,7 @@ public class DataSetUploadService {
                     .object(dataSet.getType() + "/" + dataSet.getName() + "/" + part.getFileName())
                     .sources(sources)
                     .build());
-            while(--i >= 0){
+            while(--i > 0){
                 client.removeObject(RemoveObjectArgs.builder()
                         .bucket(bucket)
                         .object(object + "." + i)

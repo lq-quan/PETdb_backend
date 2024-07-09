@@ -10,10 +10,7 @@ import com.szbldb.util.JWTHelper;
 import com.szbldb.util.MailHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +35,7 @@ public class ClientLicenseController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:36
      **/
-    @RequestMapping("/PETdatabase/dataset/license/submit")
+    @PostMapping("/PETdatabase/dataset/license/submit")
     public Result applicationSubmit(@RequestBody Submission submission, @RequestHeader String token){
         //System.out.println(submission);
         String username = JWTHelper.getUsername(token);
@@ -58,7 +55,7 @@ public class ClientLicenseController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:37
      **/
-    @RequestMapping("/PETdatabase/dataset/license/detail")
+    @GetMapping("/PETdatabase/dataset/license/detail")
     public Result checkSubmission(@RequestHeader String token){
         String username = JWTHelper.getUsername(token);
         Submission submission = clientLicenseService.checkApplicationByUsername(username);
@@ -72,7 +69,7 @@ public class ClientLicenseController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:38
      **/
-    @RequestMapping("/PETdatabase/dataset/license/verifiedOrNot")
+    @GetMapping("/PETdatabase/dataset/license/verifiedOrNot")
     public Result checkIfVerified(@RequestHeader String token){
         String username = JWTHelper.getUsername(token);
         Integer id = registerService.getIdByUsername(username).getId();
@@ -89,18 +86,20 @@ public class ClientLicenseController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:39
      **/
-    @RequestMapping("/PETdatabase/dataset/license/verifyEmail")
-    public Result verifyEmail(@RequestBody User user){
+    @PostMapping("/PETdatabase/dataset/license/verifyEmail")
+    public Result verifyEmail(@RequestBody User user, @RequestHeader String token){
         String email = user.getEmail();
+        String username = JWTHelper.getUsername(token);
         if(!StringUtils.hasLength(email)){
             throw new RuntimeException("No email found");
         }
         Map<String, Object> map = new HashMap<>();
-        String code = MailHelper.sendEmail(email);
+        String code = MailHelper.sendEmail(email, username);
         if(code == null){
             return Result.error("邮件发送失败", 50103);
         }
         map.put("code", code);
+        map.put("username", username);
         String jwtCode = JWTHelper.jwtPacker(map, 10);
         return Result.success(jwtCode);
     }
@@ -113,7 +112,7 @@ public class ClientLicenseController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:41
      **/
-    @RequestMapping("/PETdatabase/dataset/license/verifyCode")
+    @PostMapping("/PETdatabase/dataset/license/verifyCode")
     public Result verifyCode(@RequestBody UserPojo userPojo, @RequestHeader String token){
         String jwtCode = userPojo.getJwtCode();
         String code = userPojo.getCode();
@@ -133,7 +132,7 @@ public class ClientLicenseController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:42
      **/
-    @RequestMapping("/PETdatabase/dataset/license/status")
+    @GetMapping("/PETdatabase/dataset/license/status")
     public Result checkStatus(@RequestHeader String token){
         String username = JWTHelper.getUsername(token);
         Submission submission = clientLicenseService.getStatusByUsername(username);
@@ -148,7 +147,7 @@ public class ClientLicenseController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:42
      **/
-    @RequestMapping("/PETdatabase/dataset/license/update")
+    @PostMapping("/PETdatabase/dataset/license/update")
     public Result updateApplication(@RequestBody Submission submission, @RequestHeader String token){
         //System.out.println(submission);
         String username = JWTHelper.getUsername(token);

@@ -6,12 +6,7 @@ import com.szbldb.pojo.userInfoPojo.UserInfoPack;
 import com.szbldb.service.userService.UserInfoService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -31,7 +26,7 @@ public class UserInfoController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:51
      **/
-    @RequestMapping("/PETdatabase/user/info")
+    @GetMapping("/PETdatabase/user/info")
     public Result getInfo(@RequestHeader String token){
         //System.out.println(token);
         UserInfo userInfo = userInfoService.getUserInfo(token);
@@ -48,7 +43,7 @@ public class UserInfoController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:51
      **/
-    @RequestMapping("/PETdatabase/user/info/change")
+    @PostMapping("/PETdatabase/user/info/change")
     public Result changeInfo(@RequestHeader String token, @RequestBody UserInfoPack userInfoPack){
         userInfoService.changeInfo(token, userInfoPack.getUserInfo());
         return Result.success();
@@ -61,7 +56,7 @@ public class UserInfoController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:52
      **/
-    @RequestMapping("/PETdatabase/user/info/getEmail")
+    @GetMapping("/PETdatabase/user/info/getEmail")
     public Result getEmail(@RequestHeader String token){
         return Result.success(userInfoService.getEmail(token));
     }
@@ -73,7 +68,7 @@ public class UserInfoController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:53
      **/
-    @RequestMapping("/PETdatabase/user/info/uploadAvatar")
+    @GetMapping("/PETdatabase/user/info/uploadAvatar")
     public Result uploadAvatar(@RequestHeader String token, String avatar){
         try{
             String url = userInfoService.uploadAvatar(token, avatar);

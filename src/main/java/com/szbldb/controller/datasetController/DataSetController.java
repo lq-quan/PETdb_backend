@@ -7,7 +7,8 @@ import com.szbldb.pojo.datasetPojo.DataSetList;
 import com.szbldb.service.datasetService.DataSetService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -27,7 +28,7 @@ public class DataSetController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 10:51
      **/
-    @RequestMapping("/PETdatabase/dataset/list")
+    @GetMapping("/PETdatabase/dataset/list")
     public Result searchList(DataSet dataInfo){
         DataSetList dataSetList = dataSetService.searchList(dataInfo);
         return Result.success(dataSetList);
@@ -39,7 +40,7 @@ public class DataSetController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 10:52
      **/
-    @RequestMapping("/PETdatabase/dataset/list/searchGlobal")
+    @GetMapping("/PETdatabase/dataset/list/searchGlobal")
     public Result globalSearch(String word){
         System.out.println("global search:" + word);
         DataSetList dataSetList = dataSetService.searchAllLike(word);
@@ -52,7 +53,7 @@ public class DataSetController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 10:53
      **/
-    @RequestMapping("/PETdatabase/dataset/detail")
+    @GetMapping("/PETdatabase/dataset/detail")
     public Result getDetail(Integer id){
         DataSet dataSet = dataSetService.getDetail(id);
         return Result.success(dataSet);
@@ -65,7 +66,7 @@ public class DataSetController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 10:53
      **/
-    @RequestMapping("/PETdatabase/dataset/manage/deleteFile")
+    @DeleteMapping("/PETdatabase/dataset/manage/deleteFile")
     public Result deleteFile(Integer id){
         try {
             dataSetService.deleteFile(id);
@@ -82,7 +83,7 @@ public class DataSetController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 10:54
      **/
-    @RequestMapping("/PETdatabase/dataset/manage/delete")
+    @DeleteMapping("/PETdatabase/dataset/manage/delete")
     public Result deleteDataset(Integer id){
         try{
             dataSetService.deleteDataset(id);

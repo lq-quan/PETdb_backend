@@ -7,9 +7,10 @@ import com.szbldb.util.JWTHelper;
 import com.szbldb.util.MailHelper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
@@ -31,24 +32,25 @@ public class RegisterController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:48
      **/
-    @RequestMapping(value = "/PETdatabase/register/checkUserInfo")
+    @PostMapping(value = "/PETdatabase/register/checkUserInfo")
     public Result checkUsername(@RequestBody UserPojo userPojo){
         String username = userPojo.getUsername(), password = userPojo.getPassword(), email = userPojo.getEmail();
         System.out.println(username + ":" + password);
         Map<String, Object> map = new HashMap<>();
         if(this.registerService.checkIfExisted(username)){
+            password = BCrypt.hashpw(password, BCrypt.gensalt());
             map.put("username", username);
             map.put("password", password);
             map.put("email", email);
         }
         else
-            return Result.error("The name was already used by others!", 50101);
-        String code = MailHelper.sendEmail(email);
+            return Result.error("The name is too long or has been used by others!", 50101);
+        String code = MailHelper.sendEmail(email, username);
         if(code != null) {
             map.put("code", code);
             String jwtCode = JWTHelper.jwtPacker(map, 10);
             return Result.success(jwtCode);
-            //jwtCode:包括username, password, email, 生成的code
+            //jwtCode:包括username, password密文, email, 生成的code
         }
         else
             return Result.error("Failed to send code. Please check the email.");
@@ -61,7 +63,7 @@ public class RegisterController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:49
      **/
-    @RequestMapping(value = "/PETdatabase/register/checkCode")
+    @PostMapping(value = "/PETdatabase/register/checkCode")
     public Result checkCode(@RequestBody UserPojo codePojo){
         String jwtCode = codePojo.getJwtCode();
         String code = codePojo.getCode();

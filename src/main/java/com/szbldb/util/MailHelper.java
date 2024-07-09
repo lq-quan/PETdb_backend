@@ -36,12 +36,12 @@ public class MailHelper {
 
     /**
      *
-     * @Description 发送邮件
+     * @Description 发送邮件，返回验证码与用户名结合后字符串的 SHA256 值，防止被暴力破解
      * @param email 邮箱账户
      * @return java.lang.String
      * @author Quan Li 2024/7/5 16:42
      **/
-    public static String sendEmail(String email){
+    public static String sendEmail(String email, String username){
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setSubject(subject);
         StringBuilder code = new StringBuilder();
@@ -68,7 +68,7 @@ public class MailHelper {
         }
         System.out.println("邮件发送完毕！To: " + email);
         System.out.println(code);
-        return digestSha256(code.toString());
+        return digestSha256(code + username);
     }
 
     /**
@@ -91,14 +91,16 @@ public class MailHelper {
      * @author Quan Li 2024/7/5 16:42
      **/
     public static boolean verifyCode(String jwtCode, String code){
-        String check = digestSha256(code);
+        String username;
         Claims claims;
         try{
             claims = JWTHelper.jwtUnpack(jwtCode);
+            username = claims.get("username", String.class);
         }catch (ExpiredJwtException e){
             return false;
         }
         String preCode = claims.get("code", String.class);
+        String check = digestSha256(code + username);
         return preCode.equals(check);
     }
 }

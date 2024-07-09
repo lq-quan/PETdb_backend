@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.net.URL;
+
 import java.util.List;
 
 @Slf4j
@@ -35,14 +35,14 @@ public class DataDownloadController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/3 17:56
      **/
-    @RequestMapping("/PETdatabase/dataset/download")
+    /*@RequestMapping("/PETdatabase/dataset/download")
     public Result dataDownload(Integer id){
         System.out.println("File id: " + id);
         URL url = dataDownloadService.dataDownload(id);
         if(url == null)
             return Result.error("Failed to get the file", 40009);
         return Result.success(url);
-    }
+    }*/
 
     /**
      * 
@@ -51,7 +51,7 @@ public class DataDownloadController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/3 17:59
      **/
-    @RequestMapping("/PETdatabase/dataset/downloadLocal")
+    @GetMapping("/PETdatabase/dataset/downloadLocal")
     public Result downloadLocal(@RequestParam Integer id) {
         if(id == null) return Result.error("Nothing Selected", 40009);
         String url = dataDownloadService.downloadLocal(id);
@@ -69,7 +69,7 @@ public class DataDownloadController {
      * @return org.springframework.http.ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody>
      * @author Quan Li 2024/7/3 18:00
      **/
-    @RequestMapping("/PETdatabase/dataset/downloadZip")
+    @GetMapping("/PETdatabase/dataset/downloadZip")
     public ResponseEntity<StreamingResponseBody> downloadZip(@RequestParam("files") List<Integer> files,
                                                              HttpServletRequest request, HttpServletResponse response){
         System.out.println(files);

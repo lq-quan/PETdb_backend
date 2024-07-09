@@ -1,11 +1,7 @@
 package com.szbldb.service.datasetService;
 
 
-import com.aliyun.oss.*;
-import com.aliyun.oss.HttpMethod;
-import com.aliyun.oss.common.auth.CredentialsProviderFactory;
-import com.aliyun.oss.common.auth.EnvironmentVariableCredentialsProvider;
-import com.aliyun.oss.model.GeneratePresignedUrlRequest;
+
 import com.szbldb.dao.DataSetMapper;
 import com.szbldb.exception.DataSetException;
 import com.szbldb.pojo.datasetPojo.DataSet;
@@ -25,7 +21,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.io.*;
 import java.net.InetAddress;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +51,7 @@ public class DataDownloadService {
      * @return java.net.URL
      * @author Quan Li 2024/7/5 10:54
      **/
-    @Transactional(rollbackFor = Exception.class)
+    /*@Transactional(rollbackFor = Exception.class)
     public URL dataDownload(Integer fileId){
         DataSetLoc dataSetLoc = dataSetMapper.searchLocByFileId(fileId);
         if(dataSetLoc == null) return null;
@@ -82,7 +77,7 @@ public class DataDownloadService {
             log.error("获取OSS文件失败", e);
         }
         return null;
-    }
+    }*/
 
     /**
      *
@@ -96,6 +91,7 @@ public class DataDownloadService {
         DataSetLoc loc = dataSetMapper.searchLocByFileId(id);
         String filename = dataSetMapper.getFileByFileId(id).getName();
         DataSet dataSet = dataSetMapper.getDatasetByFileId(id);
+        if("private".equals(dataSet.getStatus())) return null;
         if(loc == null) return null;
         String url = null;
         try(MinioClient client = MinioClient.builder()
@@ -139,6 +135,7 @@ public class DataDownloadService {
                 .endpoint("http://" + ipAddress + ":9000")
                 .credentials("lqquan", "12345678")
                 .build()){
+            if("private".equals(dataSet.getStatus())) throw new DataSetException("数据集非公开");
             String[] names = new String[fileIDs.size()];
             int i = 0;
             for(Integer fileId : fileIDs){

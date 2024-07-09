@@ -100,20 +100,25 @@ public class CollectionService {
 
     /**
      *
-     * @Description 在指定 Collection 中加入指定数据集
+     * @Description 在指定 Collection 中加入指定数据集，返回值 0 - 添加成功；1 -数据集不存在；2 -数据集已添加过；3 -Collection已满
      * @param did 数据集 id
      * @param cid Collection id
      * @param username 用户名
      * @author Quan Li 2024/7/5 15:52
      **/
     @Transactional(rollbackFor = Exception.class)
-    public void addDatasetToCollection(Integer did, Integer cid, String username) throws ExtensionException {
+    public Integer addDatasetToCollection(Integer did, Integer cid, String username) throws ExtensionException {
+        DataSet dataset = extensionMapper.checkDataset(did);
+        if(dataset == null) return 1;
         if(extensionMapper.checkIfUserColl(username, cid) != 1){
             ExtensionException exception = new ExtensionException("用户试图修改非本人Collection");
             log.warn("用户试图修改非本人Collection", exception);
             throw exception;
         }
-        extensionMapper.insertDatasetToColl(did, cid);
+        if(extensionMapper.checkIfDsetInColl(did, cid) == 1) return 2;
+        if(extensionMapper.getDSetCountInColl(cid) == 50) return 3;
+        extensionMapper.insertDatasetToColl(did, cid, dataset.getStatus(), dataset.getName());
+        return 0;
     }
 
     /**

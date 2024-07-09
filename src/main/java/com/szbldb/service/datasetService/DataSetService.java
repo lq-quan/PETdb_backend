@@ -1,9 +1,5 @@
 package com.szbldb.service.datasetService;
 
-import com.aliyun.oss.ClientException;
-import com.aliyun.oss.OSS;
-import com.aliyun.oss.OSSClientBuilder;
-import com.aliyun.oss.OSSException;
 import com.szbldb.dao.DataSetMapper;
 import com.szbldb.exception.DataSetException;
 import com.szbldb.pojo.datasetPojo.DataSet;
@@ -17,15 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.aliyun.oss.common.auth.*;
-import com.aliyun.oss.model.*;
-
 import java.net.InetAddress;
-import java.net.URLDecoder;
 
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -107,24 +97,21 @@ public class DataSetService {
         dataSetMapper.updateSize(-size, datasetId);
         DataSet dataSet = dataSetMapper.getDatasetById(datasetId);
         String objectName = dataSet.getType() + "/" + dataSet.getName() + "/" + deletedFile.getName();
-        if("local".equals(dataSet.getStatus())){
-            try(MinioClient client = MinioClient.builder()
-                    .endpoint("http://" + ipAddress + ":9000")
-                    .credentials("lqquan", "12345678")
-                    .build()){
-                client.removeObject(RemoveObjectArgs.builder()
-                        .bucket(bucket)
-                        .object(objectName)
-                        .build());
-            }catch (Exception e){
-                logService.addLog("失败：删除 " + dataSet.getName() + " 中的 " + deletedFile.getName());
-                log.error("删除文件失败", e);
-                throw new DataSetException("删除文件失败");
-            }
-            logService.addLog("成功：删除 " + dataSet.getName() + " 中的 " + deletedFile.getName());
-            return;
+        try(MinioClient client = MinioClient.builder()
+                .endpoint("http://" + ipAddress + ":9000")
+                .credentials("lqquan", "12345678")
+                .build()){
+            client.removeObject(RemoveObjectArgs.builder()
+                    .bucket(bucket)
+                    .object(objectName)
+                    .build());
+        }catch (Exception e){
+            logService.addLog("失败：删除 " + dataSet.getName() + " 中的 " + deletedFile.getName());
+            log.error("删除文件失败", e);
+            throw new DataSetException("删除文件失败");
         }
-        String endpoint = "https://oss-cn-shenzhen.aliyuncs.com";
+        logService.addLog("成功：删除 " + dataSet.getName() + " 中的 " + deletedFile.getName());
+        /*String endpoint = "https://oss-cn-shenzhen.aliyuncs.com";
         EnvironmentVariableCredentialsProvider credentialsProvider;
         try {
             credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
@@ -149,7 +136,7 @@ public class DataSetService {
             if (ossClient != null) {
                 ossClient.shutdown();
             }
-        }
+        }*/
     }
 
     /**
@@ -172,6 +159,7 @@ public class DataSetService {
         dataSetMapper.deleteAllFilesOfDataset(id);
         dataSetMapper.deleteDatasetLoc(id);
         dataSetMapper.deleteDataset(id);
+        dataSetMapper.deleteCollDset(id);
         if("local".equals(dataSet.getStatus())){
             try(MinioClient client = MinioClient.builder()
                     .endpoint("http://" + ipAddress + ":9000")
@@ -186,10 +174,8 @@ public class DataSetService {
                 throw e;
             }
             logService.addLog("成功：删除数据集 " + dataSet.getName());
-            return;
         }
-
-        String endPoint = "https://oss-cn-shenzhen.aliyuncs.com";
+        /*String endPoint = "https://oss-cn-shenzhen.aliyuncs.com";
         EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
         String bucketName = "szbldb-test";
         // 待删除目录的完整路径，完整路径中不包含Bucket名称。
@@ -238,7 +224,7 @@ public class DataSetService {
             if (ossClient != null) {
                 ossClient.shutdown();
             }
-        }
+        }*/
     }
 
 }

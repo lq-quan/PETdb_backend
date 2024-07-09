@@ -28,7 +28,7 @@ public class AdminLicenseController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:31
      **/
-    @RequestMapping("/PETdatabase/dataset/license/admin/get")
+    @GetMapping("/PETdatabase/dataset/license/admin/get")
     public Result searchSubmission(String name, String status, Integer page, Integer limit){
         SubmissionList submissionList = adminLicenseService.searchSubmissions(name, status, page, limit);
         return Result.success(submissionList);
@@ -59,7 +59,7 @@ public class AdminLicenseController {
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:35
      **/
-    @RequestMapping("/PETdatabase/dataset/license/admin/detail")
+    @GetMapping("/PETdatabase/dataset/license/admin/detail")
     public Result checkSubmissionDetail(Integer id){
         return Result.success(adminLicenseService.getSubmissionDetail(id));
     }

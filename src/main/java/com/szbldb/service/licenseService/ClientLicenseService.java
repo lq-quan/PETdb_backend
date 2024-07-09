@@ -44,9 +44,11 @@ public class ClientLicenseService {
      **/
     @Transactional(rollbackFor = Exception.class)
     public boolean updateApplication(Submission submission, String username){
-        if(licenseMapper.getSid(username) == null) return false;
+        Integer sid = licenseMapper.getSid(username);
+        if(sid == null) return false;
         submission.setDate(LocalDate.now());
         licenseMapper.updateApplicationByUsername(submission, username);
+        licenseMapper.updateSubmissionById(sid, null, "pending", null);
         return true;
     }
 

@@ -1,7 +1,9 @@
 package com.szbldb.interceptor;
 
+import com.alibaba.fastjson.JSONObject;
 import com.szbldb.dao.LicenseMapper;
 import com.szbldb.dao.UserMapper;
+import com.szbldb.pojo.Result;
 import com.szbldb.util.JWTHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -10,6 +12,8 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+
+import java.io.IOException;
 
 @Slf4j
 @Component
@@ -25,7 +29,7 @@ public class LicenseCheckInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler){
+    public boolean preHandle(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) throws IOException {
         String token = request.getHeader("token");
         if(token == null || token.isEmpty()) return false;
         String username = JWTHelper.getUsername(token);
@@ -34,6 +38,9 @@ public class LicenseCheckInterceptor implements HandlerInterceptor {
             if("approved".equals(licenseMapper.getStatusByUsername(username))) return true;
         }
         log.warn("用户未通过申请，但试图下载数据：" + username);
+        Result error = Result.error("Not_Allowed", 52006);
+        String notAllowed = JSONObject.toJSONString(error);
+        response.getWriter().write(notAllowed);
         return false;
     }
 }

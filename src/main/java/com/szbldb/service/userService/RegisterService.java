@@ -4,6 +4,7 @@ import com.szbldb.dao.UserMapper;
 import com.szbldb.pojo.userPojo.User;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,7 @@ public class RegisterService {
      * @author Quan Li 2024/7/5 16:25
      **/
     public boolean checkIfExisted(String username){
+        if(username.length() > 50) return false;
         return userMapper.getUserByUsername(username) == null;
     }
 
@@ -35,7 +37,7 @@ public class RegisterService {
      *
      * @Description 用户注册并初始化用户信息
      * @param username 用户名
-     * @param password 密码
+     * @param password 经 Bcrypt 加密的密码
      * @param email 邮箱
      * @return boolean
      * @author Quan Li 2024/7/5 16:25

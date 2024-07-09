@@ -3,6 +3,7 @@ package com.szbldb.service.licenseService;
 import com.szbldb.dao.LicenseMapper;
 import com.szbldb.pojo.licensePojo.Submission;
 import com.szbldb.pojo.licensePojo.SubmissionList;
+import com.szbldb.service.logService.LogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +15,12 @@ public class AdminLicenseService {
 
     private final LicenseMapper licenseMapper;
 
-    public AdminLicenseService(@Autowired LicenseMapper licenseMapper) {
+    private final LogService logService;
+
+    @Autowired
+    public AdminLicenseService(LicenseMapper licenseMapper, LogService logService) {
         this.licenseMapper = licenseMapper;
+        this.logService = logService;
     }
 
     /**
@@ -59,5 +64,6 @@ public class AdminLicenseService {
     @Transactional(rollbackFor = Exception.class)
     public void auditSubmission(Integer id, String auditor, String status, String reason){
         licenseMapper.updateSubmissionById(id, auditor, status, reason);
+        logService.addLog("对下载许可进行了审批");
     }
 }
