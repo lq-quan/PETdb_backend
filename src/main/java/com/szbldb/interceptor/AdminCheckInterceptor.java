@@ -18,7 +18,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class AdminCheckInterceptor implements HandlerInterceptor {
     private final UserMapper userMapper;
 
-    public AdminCheckInterceptor(@Autowired UserMapper userMapper) {
+    @Autowired
+    public AdminCheckInterceptor(UserMapper userMapper) {
         this.userMapper = userMapper;
     }
 
@@ -41,6 +42,8 @@ public class AdminCheckInterceptor implements HandlerInterceptor {
             return true;
         }
         log.warn("Admin 异地登录或令牌失效：" + ipAddress);
+        Result logout = Result.error("You have been logged out.");
+        response.getWriter().write(JSONObject.toJSONString(logout));
         return false;
     }
 }

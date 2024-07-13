@@ -45,7 +45,10 @@ public class CollectionController {
      * @author Quan Li 2024/7/4 15:26
      **/
     @GetMapping("/PETdatabase/extended/collection/list")
-    public Result getCollectionList(@RequestHeader String token){
+    public Result getCollectionList(@RequestHeader(required = false) String token){
+        if(token == null){
+            return Result.success("not_login");
+        }
         String username = JWTHelper.getUsername(token);
         CollectionList list = collectionService.getCollectionList(username);
         return Result.success(list);

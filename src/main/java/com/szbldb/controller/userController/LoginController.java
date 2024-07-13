@@ -11,7 +11,6 @@ import com.szbldb.util.MailHelper;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,7 +38,7 @@ public class LoginController {
     public Result login(@RequestBody User user) {
         String username = user.getUsername();
         String password = user.getPassword();
-//        System.out.println(user);
+        System.out.println("Login:" + user);
         try{
             if (loginService.check(username, password)) {
                 return Result.success(JWTHelper.generateUserPojo(username));
@@ -48,8 +47,7 @@ public class LoginController {
                 return Result.error("Invalid username or incorrect password!", 60204);
         }catch (UserException e){
             log.info("检测到管理员登录：" + username);
-            //String code = MailHelper.sendEmail(loginService.getEmail(username));
-            String code = DigestUtils.sha256Hex("123456" + username);
+            String code = MailHelper.sendEmail(loginService.getEmail(username), username);
             if(code != null) {
                 Map<String, Object> map = new HashMap<>();
                 map.put("code", code);

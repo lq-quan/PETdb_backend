@@ -4,7 +4,6 @@ import com.szbldb.dao.UserMapper;
 import com.szbldb.pojo.userPojo.User;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,14 +21,13 @@ public class RegisterService {
     }
 
     /**
-     *
      * @Description 检查用户名是否重复
      * @param username 用户名
      * @return boolean
      * @author Quan Li 2024/7/5 16:25
      **/
     public boolean checkIfExisted(String username){
-        if(username.length() > 50) return false;
+        if(username.length() > 50 || "default".equals(username)) return false;
         return userMapper.getUserByUsername(username) == null;
     }
 

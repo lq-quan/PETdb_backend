@@ -1,9 +1,8 @@
 package com.szbldb.interceptor;
 
-import com.alibaba.fastjson.JSONObject;
+
 import com.szbldb.dao.LicenseMapper;
 import com.szbldb.dao.UserMapper;
-import com.szbldb.pojo.Result;
 import com.szbldb.util.JWTHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,9 +37,7 @@ public class LicenseCheckInterceptor implements HandlerInterceptor {
             if("approved".equals(licenseMapper.getStatusByUsername(username))) return true;
         }
         log.warn("用户未通过申请，但试图下载数据：" + username);
-        Result error = Result.error("Not_Allowed", 52006);
-        String notAllowed = JSONObject.toJSONString(error);
-        response.getWriter().write(notAllowed);
+        response.sendError(403);
         return false;
     }
 }

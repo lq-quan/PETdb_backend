@@ -10,9 +10,13 @@ import java.util.List;
 @Mapper
 public interface DataSetMapper {
 
-    @Select("select * from dataset where name like '%${name}%' and type like '%${type}%'" +
-            " and uploader like '%${uploader}%' and country like '%${country}%'")
-    List<DataSet> searchLike(DataSet dataSet);
+    @Select("select * from dataset where name like '%${dataSet.name}%' and type like '%${dataSet.type}%'" +
+            " and uploader like '%${dataSet.uploader}%' and country like '%${dataSet.country}%' order by id limit #{limit} offset #{offset}")
+    List<DataSet> searchLikeAsc(DataSet dataSet, Integer offset, Integer limit);
+
+    @Select("select * from dataset where name like '%${dataSet.name}%' and type like '%${dataSet.type}%'" +
+            " and uploader like '%${dataSet.uploader}%' and country like '%${dataSet.country}%' order by id desc limit #{limit} offset #{offset}")
+    List<DataSet> searchLikeDesc(DataSet dataSet, Integer offset, Integer limit);
 
     @Select("select * from dataset where id = #{id}")
     DataSet getDatasetById(Integer id);

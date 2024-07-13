@@ -12,7 +12,7 @@ public interface UserMapper {
     @Select("select * from user")
     List<User> list();
 
-    @Select("select * from user where username = #{username}")
+    @Select("select * from user where binary username = #{username}")
     User getUserByUsername(String username);
 
     @Insert("insert into token_blacklist value (#{username}, #{token}, #{expireTime})")
@@ -24,17 +24,20 @@ public interface UserMapper {
     @Select("select id from user where username = #{username}")
     Integer getIdByName(String username);
 
+    @Update("update user set password = #{password} where binary username = #{username}")
+    void modifyPassword(String username, String password);
+
     @Options(useGeneratedKeys = true, keyProperty = "id")
     @Insert("insert into user (username, password, email) value (#{username}, #{password}, #{email})")
     void insertUser(User user);
 
-    @Select("select email from user where username = #{username}")
+    @Select("select email from user where binary username = #{username}")
     String getEmail(String username);
 
     @Select("select * from userinfo where id = #{id}")
     UserInfo getInfoById(int id);
 
-    @Select("select roles from userinfo inner join user u on userinfo.id = u.id and u.username = #{username}")
+    @Select("select roles from userinfo inner join user u on userinfo.id = u.id and binary u.username = #{username}")
     String getRolesByUsername(String username);
 
     @Insert("insert into userinfo (id, name) value (#{id}, #{name})")
@@ -50,9 +53,9 @@ public interface UserMapper {
             " where username = #{username}")
     void updateAdmin(String username, String ipAddress, String token, Date expireTime);
 
-    @Select("select ip_address from admins where username = #{username}")
+    @Select("select ip_address from admins where binary username = #{username}")
     String checkIpAddrOfAdmin(String username);
 
-    @Select("select cur_token from admins where username = #{username}")
+    @Select("select cur_token from admins where binary username = #{username}")
     String checkTokenOfAdmin(String username);
 }

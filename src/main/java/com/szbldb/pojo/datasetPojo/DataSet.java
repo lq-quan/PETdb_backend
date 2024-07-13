@@ -16,6 +16,7 @@ public class DataSet {
     private Long size;
     private LocalDate date;
     private String description;
+    private Integer downloads;
     private List<File> files;
 
     @Override

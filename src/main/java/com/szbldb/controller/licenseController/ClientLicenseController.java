@@ -2,14 +2,11 @@ package com.szbldb.controller.licenseController;
 
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.licensePojo.Submission;
-import com.szbldb.pojo.userPojo.User;
 import com.szbldb.pojo.userPojo.UserPojo;
 import com.szbldb.service.licenseService.ClientLicenseService;
-import com.szbldb.service.userService.RegisterService;
 import com.szbldb.util.JWTHelper;
 import com.szbldb.util.MailHelper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -20,12 +17,10 @@ public class ClientLicenseController {
 
     private final ClientLicenseService clientLicenseService;
 
-    private final RegisterService registerService;
 
     @Autowired
-    public ClientLicenseController(ClientLicenseService clientLicenseService, RegisterService registerService) {
+    public ClientLicenseController(ClientLicenseService clientLicenseService) {
         this.clientLicenseService = clientLicenseService;
-        this.registerService = registerService;
     }
 
     /**
@@ -39,8 +34,7 @@ public class ClientLicenseController {
     public Result applicationSubmit(@RequestBody Submission submission, @RequestHeader String token){
         //System.out.println(submission);
         String username = JWTHelper.getUsername(token);
-        Integer id = registerService.getIdByUsername(username).getId();
-        if(!clientLicenseService.checkIfVerified(id)){
+        if(!clientLicenseService.checkIfVerified(username)){
             return Result.error("Email validation failed or expired!", 52004);
         }
         if(clientLicenseService.createApplication(submission, username))
@@ -72,8 +66,7 @@ public class ClientLicenseController {
     @GetMapping("/PETdatabase/dataset/license/verifiedOrNot")
     public Result checkIfVerified(@RequestHeader String token){
         String username = JWTHelper.getUsername(token);
-        Integer id = registerService.getIdByUsername(username).getId();
-        if(clientLicenseService.checkIfVerified(id)){
+        if(clientLicenseService.checkIfVerified(username)){
             return Result.success("Yes");
         }
         else return Result.success("No");
@@ -82,17 +75,13 @@ public class ClientLicenseController {
     /**
      *
      * @Description 往指定邮箱发送验证码
-     * @param user 获取用户邮箱，以便发送验证码
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:39
      **/
     @PostMapping("/PETdatabase/dataset/license/verifyEmail")
-    public Result verifyEmail(@RequestBody User user, @RequestHeader String token){
-        String email = user.getEmail();
+    public Result verifyEmail(@RequestHeader String token){
         String username = JWTHelper.getUsername(token);
-        if(!StringUtils.hasLength(email)){
-            throw new RuntimeException("No email found");
-        }
+        String email = clientLicenseService.getEmail(username);
         Map<String, Object> map = new HashMap<>();
         String code = MailHelper.sendEmail(email, username);
         if(code == null){
@@ -115,11 +104,13 @@ public class ClientLicenseController {
     @PostMapping("/PETdatabase/dataset/license/verifyCode")
     public Result verifyCode(@RequestBody UserPojo userPojo, @RequestHeader String token){
         String jwtCode = userPojo.getJwtCode();
+        if(jwtCode == null || jwtCode.isEmpty()) return Result.error("Please send the email before next", 50203);
         String code = userPojo.getCode();
         String username = JWTHelper.getUsername(token);
+        String usernameInJwt = JWTHelper.getUsername(jwtCode);
+        if(username == null || !username.equals(usernameInJwt)) return Result.error("身份验证失败！", 50203);
         if(MailHelper.verifyCode(jwtCode, code)){
-            User user = registerService.getIdByUsername(username);
-            clientLicenseService.insertValidEmail(user.getId(), user.getEmail());
+            clientLicenseService.insertValidEmail(username);
             return Result.success(true);
         }
         else return Result.error("Wrong or Expired code!", 50201);
@@ -133,7 +124,12 @@ public class ClientLicenseController {
      * @author Quan Li 2024/7/4 15:42
      **/
     @GetMapping("/PETdatabase/dataset/license/status")
-    public Result checkStatus(@RequestHeader String token){
+    public Result checkStatus(@RequestHeader(required = false) String token){
+        if(token == null){
+            Submission submission = new Submission();
+            submission.setStatus("not_login");
+            return Result.success(submission);
+        }
         String username = JWTHelper.getUsername(token);
         Submission submission = clientLicenseService.getStatusByUsername(username);
         return Result.success(submission);
@@ -151,8 +147,7 @@ public class ClientLicenseController {
     public Result updateApplication(@RequestBody Submission submission, @RequestHeader String token){
         //System.out.println(submission);
         String username = JWTHelper.getUsername(token);
-        Integer id = registerService.getIdByUsername(username).getId();
-        if(!clientLicenseService.checkIfVerified(id)){
+        if(!clientLicenseService.checkIfVerified(username)){
             return Result.error("Email validation failed or expired!", 52004);
         }
         if(clientLicenseService.updateApplication(submission, username))

@@ -37,14 +37,27 @@ public class DataSetService {
 
     /**
      *
-     * @Description 根据数据集信息搜索列表
+     * @Description 通过数据集信息搜索数据集
      * @param dataSet 数据集信息
+     * @param page （第）页数
+     * @param limit 每页项数
+     * @param sort 排序方式，+id 或 -id
+     * @param word 关键词
      * @return com.szbldb.pojo.datasetPojo.DataSetList
-     * @author Quan Li 2024/7/5 10:58
+     * @author Quan Li 2024/7/12 16:07
      **/
     @Transactional(rollbackFor = Exception.class)
-    public DataSetList searchList(DataSet dataSet){
-        List<DataSet> dataSets = dataSetMapper.searchLike(dataSet);
+    public DataSetList searchList(DataSet dataSet, Integer page, Integer limit, String sort, String word){
+        if(word != null && !word.isEmpty()) return searchAllLike(word);
+        if(page == null) page = 1;
+        if(limit == null) limit = 20;
+        List<DataSet> dataSets;
+        if("-id".equals(sort)){
+            dataSets = dataSetMapper.searchLikeDesc(dataSet, (page - 1) * limit, limit);
+        }
+        else{
+            dataSets = dataSetMapper.searchLikeAsc(dataSet, (page - 1) * limit, limit);
+        }
         for(DataSet ds : dataSets){
             ds.setFiles(dataSetMapper.getFilesByDatasetId(ds.getId()));
         }

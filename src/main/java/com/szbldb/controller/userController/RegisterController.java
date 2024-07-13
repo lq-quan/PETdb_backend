@@ -35,6 +35,9 @@ public class RegisterController {
     @PostMapping(value = "/PETdatabase/register/checkUserInfo")
     public Result checkUsername(@RequestBody UserPojo userPojo){
         String username = userPojo.getUsername(), password = userPojo.getPassword(), email = userPojo.getEmail();
+        if(username == null || email == null || username.isEmpty() || email.isEmpty() || password.length() != 64){
+            return Result.error("Invalid data!", 50101);
+        }
         System.out.println(username + ":" + password);
         Map<String, Object> map = new HashMap<>();
         if(this.registerService.checkIfExisted(username)){

@@ -9,7 +9,7 @@ import io.jsonwebtoken.Claims;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 
 
 import java.util.Date;
@@ -54,6 +54,7 @@ public class LoginService {
      **/
     //@Transactional(rollbackFor = Exception.class)
     public void updateAdmin(String username, String ipAddress, String token){
+        logService.setUser(username);
         logService.addLog("成功：管理员 " + username + " 登录");
         Date expireTime = new Date(System.currentTimeMillis() + 24 * 3600 * 1000L);
         userMapper.updateAdmin(username, ipAddress, token, expireTime);
@@ -73,4 +74,14 @@ public class LoginService {
         userMapper.logout(username, token, date);
     }
 
+    /**
+     *
+     * @Description 获取用户邮箱
+     * @param username 用户名
+     * @return java.lang.String
+     * @author Quan Li 2024/7/11 20:51
+     **/
+    public String getEmail(String username) {
+        return userMapper.getEmail(username);
+    }
 }

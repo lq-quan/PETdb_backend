@@ -3,16 +3,20 @@ package com.szbldb.service.userService;
 import com.szbldb.dao.UserMapper;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.util.JWTHelper;
+import com.szbldb.util.MailHelper;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -38,6 +42,8 @@ public class UserInfoService {
         String username = JWTHelper.getUsername(jwtUser);
         Integer id = userMapper.getIdByName(username);
         UserInfo info = userMapper.getInfoById(id);
+        String avatar = info.getAvatar();
+        if(avatar == null) avatar = "default.jpg";
         try(MinioClient client = MinioClient.builder()
                 .endpoint("http://" + ipAddress + ":9000")
                 .credentials("lqquan", "12345678")
@@ -45,7 +51,7 @@ public class UserInfoService {
             String avatarUrl =  client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                     .method(Method.GET)
                     .bucket("test")
-                    .object("images/" + info.getAvatar())
+                    .object("images/" + avatar)
                     .expiry(24, TimeUnit.HOURS)
                     .build());
             info.setAvatar(avatarUrl);
@@ -80,6 +86,43 @@ public class UserInfoService {
     public String getEmail(String token){
         String username = JWTHelper.getUsername(token);
         return userMapper.getEmail(username);
+    }
+
+    /**
+     * @Description 检查用户身份，以修改密码；邮件发送失败，返回 null
+     * @param username 用户名
+     * @return java.lang.String
+     * @author Quan Li 2024/7/10 16:19
+     **/
+    public String checkBeforeModifyPsw(String username){
+        String email = userMapper.getEmail(username);
+        String sentCode = MailHelper.sendEmail(email, username);
+        if(sentCode == null) return null;
+        Map<String, Object> map = new HashMap<>();
+        map.put("code", sentCode);
+        map.put("username", username);
+        return JWTHelper.jwtPacker(map, 10);
+    }
+
+    /**
+     *
+     *
+     * @param jwtCode 含有验证码密文的令牌
+     * @param username 用户名
+     * @param password 经 SHA256 加密的新密码
+     * @param code 用户输入的验证码
+     * @return boolean
+     * @author Quan Li 2024/7/10 16:24
+     **/
+    public boolean modifyPsw(String jwtCode, String username, String password, String code){
+        String usernameInJwt = JWTHelper.getUsername(jwtCode);
+        if(!username.equals(usernameInJwt)) return false;
+        password = BCrypt.hashpw(password, BCrypt.gensalt());
+        if(MailHelper.verifyCode(jwtCode, code)){
+            userMapper.modifyPassword(username, password);
+            return true;
+        }
+        return false;
     }
 
 

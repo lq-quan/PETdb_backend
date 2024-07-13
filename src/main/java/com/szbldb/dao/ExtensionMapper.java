@@ -2,6 +2,7 @@ package com.szbldb.dao;
 
 import com.szbldb.pojo.datasetPojo.DataSet;
 import com.szbldb.pojo.extensionPojo.Collection;
+import com.szbldb.pojo.extensionPojo.News;
 import org.apache.ibatis.annotations.*;
 
 
@@ -26,7 +27,7 @@ public interface ExtensionMapper {
     @Insert("insert into collection (uid, description, create_time, name)" +
             " select id, #{collection.description}, #{collection.createTime}, #{collection.name}" +
             " from user" +
-            " where username = #{username}")
+            " where binary username = #{username}")
     void createCollection(String username, Collection collection);
 
     @Select("select count(*) from collection " +
@@ -67,7 +68,7 @@ public interface ExtensionMapper {
     DataSet checkDataset(Integer did);
 
     @Delete("delete from collection where id = #{cid} " +
-            "and uid in (select id as uid from user where username = #{username})")
+            "and uid in (select id as uid from user where binary username = #{username})")
     void deleteColl(Integer cid, String username);
 
     @Insert("insert into coll_dset (cid, did, status, dataset_name) value (#{cid}, #{did}, #{status}, #{datasetName})")
@@ -76,5 +77,20 @@ public interface ExtensionMapper {
 
     @Delete("delete from coll_dset where cid = #{cid} and did = #{did}")
     void deleteDatasetFromColl(Integer did, Integer cid);
+
+    @Insert("insert into news (content, image_src, link) value (#{news.content}, #{news.imageSrc}, #{news.link})")
+    void createNews(News news);
+
+    @Results({
+            @Result(column = "image_src", property = "imageSrc")
+    })
+    @Select("select nid, image_src, content, link from news")
+    List<News> getNews();
+
+    @Select("select image_src from news where nid = #{nid}")
+    String getNewsSrcByNid(Integer nid);
+
+    @Delete("delete from news where nid = #{nid}")
+    void deleteNews(Integer nid);
 
 }

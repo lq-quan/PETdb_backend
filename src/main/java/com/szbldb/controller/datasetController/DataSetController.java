@@ -29,8 +29,9 @@ public class DataSetController {
      * @author Quan Li 2024/7/4 10:51
      **/
     @GetMapping("/PETdatabase/dataset/list")
-    public Result searchList(DataSet dataInfo){
-        DataSetList dataSetList = dataSetService.searchList(dataInfo);
+    public Result searchList(DataSet dataInfo, Integer page, Integer limit, String sort, String word){
+        System.out.println(dataInfo + " " + sort);
+        DataSetList dataSetList = dataSetService.searchList(dataInfo, page, limit, sort, word);
         return Result.success(dataSetList);
     }
 
@@ -71,7 +72,7 @@ public class DataSetController {
         try {
             dataSetService.deleteFile(id);
         } catch (Exception e) {
-            log.error("删除文件失败", e);
+            return Result.error("failed to delete", 40013);
         }
         return Result.success();
     }

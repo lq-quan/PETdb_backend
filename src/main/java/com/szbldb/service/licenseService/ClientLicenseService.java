@@ -36,6 +36,17 @@ public class ClientLicenseService {
 
     /**
      *
+     * @Description 通过用户名获取邮箱
+     * @param username 用户名
+     * @return java.lang.String
+     * @author Quan Li 2024/7/11 20:32
+     **/
+    public String getEmail(String username){
+        return licenseMapper.getEmailByUsername(username);
+    }
+
+    /**
+     *
      * @Description 用户修改申请
      * @param submission 修改后的信息
      * @param username 用户名
@@ -96,23 +107,23 @@ public class ClientLicenseService {
     /**
      *
      * @Description 检查用户是否已通过邮箱验证
-     * @param id 用户 id
+     * @param username 用户名
      * @return boolean
      * @author Quan Li 2024/7/5 16:09
      **/
-    public boolean checkIfVerified(Integer id){
-        return licenseMapper.checkIfVerified(id) > 0;
+    public boolean checkIfVerified(String username){
+        return licenseMapper.checkIfVerifiedByUsername(username) > 0;
     }
+
 
     /**
      *
      * @Description 用户通过邮箱验证后，修改数据库
-     * @param id 用户 id
-     * @param email 邮箱
+     * @param username 用户名
      * @author Quan Li 2024/7/5 16:11
      **/
-    public void insertValidEmail(Integer id, String email){
+    public void insertValidEmail(String username){
         Date date = new Date(System.currentTimeMillis() + 24 * 3600 * 1000L);
-        licenseMapper.insertValidEmail(id, email, date);
+        licenseMapper.insertValidEmail(username, date);
     }
 }

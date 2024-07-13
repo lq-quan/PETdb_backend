@@ -33,23 +33,27 @@ public interface LicenseMapper {
     })
     Submission checkApplication(Integer sid);
 
-    @Insert("insert into email_status value (#{id}, #{email}, #{expireTime})")
-    void insertValidEmail(Integer id, String email, Date expireTime);
+    @Insert("insert into email_status select id, email, #{expireTime} as 'expire_time' from user where username = #{username}")
+    void insertValidEmail(String username, Date expireTime);
 
-    @Select("select count(*) from email_status where id = #{id}")
-    Integer checkIfVerified(Integer id);
+    @Select("select email from user where binary username = #{username}")
+    String getEmailByUsername(String username);
 
-    @Insert("insert into user_appl select #{sid} as 'sid', id as 'uid', username from user where username = #{username}")
+    @Select("select count(*) from email_status e inner join user u on u.id = e.id and u.username = #{username}")
+    Integer checkIfVerifiedByUsername(String username);
+
+    @Select("select count(username) from admins where binary username = #{username}")
+    Integer checkIfAdmin(String username);
+
+    @Insert("insert into user_appl select #{sid} as 'sid', id as 'uid', username from user where binary username = #{username}")
     void appendUserAppl(String username, Integer sid);
 
-    @Select("select sid from user_appl where username = #{username}")
+    @Select("select sid from user_appl where binary username = #{username}")
     Integer getSid(String username);
 
     @Select("select status from submission inner join user_appl ua on submission.id = ua.sid and ua.username = #{username}")
     String getStatusByUsername(String username);
 
-    @Select("select status from submission where id = #{sid}")
-    String getStatusBySid(Integer sid);
 
     @Select("select * from submission where firstname like '%${name}%' or lastname like '%${name}%' and status = #{status} " +
             "limit #{limit} offset #{offset}")

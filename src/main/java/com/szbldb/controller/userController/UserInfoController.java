@@ -3,8 +3,10 @@ package com.szbldb.controller.userController;
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.pojo.userInfoPojo.UserInfoPack;
+import com.szbldb.pojo.userPojo.UserPojo;
 import com.szbldb.service.userService.UserInfoService;
 
+import com.szbldb.util.JWTHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,6 +49,37 @@ public class UserInfoController {
     public Result changeInfo(@RequestHeader String token, @RequestBody UserInfoPack userInfoPack){
         userInfoService.changeInfo(token, userInfoPack.getUserInfo());
         return Result.success();
+    }
+
+    /**
+     *
+     * @Description 用户申请修改密码，向邮箱发送验证码
+     * @param token 令牌
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/10 16:39
+     **/
+    @GetMapping("/PETdatabase/user/info/checkIdentity")
+    public Result checkIdentity(@RequestHeader String token){
+        String jwtCode = userInfoService.checkBeforeModifyPsw(JWTHelper.getUsername(token));
+        if(jwtCode == null) return Result.error("邮件发送失败", 50103);
+        return Result.success(jwtCode);
+    }
+
+    /**
+     *
+     * @Description 检验验证码并修改密码
+     * @param token 用户令牌
+     * @param userPojo 包括：新密码密文，jwtCode，以及验证码
+     * @return com.szbldb.pojo.Result
+     * @author Quan Li 2024/7/10 16:40
+     **/
+    @PostMapping("/PETdatabase/user/info/modifyPsw")
+    public Result modifyPassword(@RequestHeader String token, @RequestBody UserPojo userPojo){
+        String username = JWTHelper.getUsername(token);
+        if(userInfoService.modifyPsw(userPojo.getJwtCode(), username, userPojo.getPassword(), userPojo.getCode())){
+            return Result.success();
+        }
+        return Result.error("Wrong or expired code!", 50201);
     }
 
     /**
