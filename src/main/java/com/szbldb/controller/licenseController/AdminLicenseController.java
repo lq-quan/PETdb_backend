@@ -25,12 +25,13 @@ public class AdminLicenseController {
      * @param status 申请状态
      * @param page （第）页数
      * @param limit 每页项数
+     * @param sort 排序方式，+id / -id
      * @return com.szbldb.pojo.Result
      * @author Quan Li 2024/7/4 15:31
      **/
     @GetMapping("/PETdatabase/dataset/license/admin/get")
-    public Result searchSubmission(String name, String status, Integer page, Integer limit){
-        SubmissionList submissionList = adminLicenseService.searchSubmissions(name, status, page, limit);
+    public Result searchSubmission(String name, String status, Integer page, Integer limit, String sort){
+        SubmissionList submissionList = adminLicenseService.searchSubmissions(name, status, page, limit, sort);
         return Result.success(submissionList);
     }
 
@@ -45,6 +46,7 @@ public class AdminLicenseController {
     @PostMapping("/PETdatabase/dataset/license/admin/approve")
     public Result auditSubmission(@RequestHeader String token, @RequestBody Map<String, Object> map) {
         String status = (String) map.get("status"), reason = (String)map.get("reason");
+        if(!"approved".equals(status) && !"rejected".equals(status)) return Result.error("Bad request", 50008);
         Integer sid = (Integer)map.get("id");
         //System.out.println(id + " " + status);
         String username = JWTHelper.getUsername(token);

@@ -9,8 +9,8 @@ import java.util.List;
 
 @Mapper
 public interface UserMapper {
-    @Select("select * from user")
-    List<User> list();
+    @Select("select username from user where id = #{id}")
+    String getUsernameById(Integer id);
 
     @Select("select * from user where binary username = #{username}")
     User getUserByUsername(String username);
@@ -58,4 +58,20 @@ public interface UserMapper {
 
     @Select("select cur_token from admins where binary username = #{username}")
     String checkTokenOfAdmin(String username);
+
+    @Select("select us.id, username, email from user us inner join userinfo ui on us.id = ui.id and ui.roles = 'admin' " +
+            "limit #{limit} offset #{offset}")
+    List<User> getAdmins(Integer limit, Integer offset);
+
+    @Insert("insert into admins (username) value (#{username})")
+    void insertAdmin(String username);
+
+    @Delete("delete from admins where username in (select username from user where id = #{id})")
+    void deleteAdminById(Integer id);
+
+    @Delete("delete from userinfo where id = #{id}")
+    void deleteUserinfo(Integer id);
+
+    @Delete("delete from user where id = #{id}")
+    void deleteUser(Integer id);
 }

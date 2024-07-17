@@ -4,6 +4,7 @@ import com.szbldb.dao.LicenseMapper;
 import com.szbldb.pojo.licensePojo.Submission;
 import com.szbldb.pojo.licensePojo.SubmissionList;
 import com.szbldb.service.logService.LogService;
+import com.szbldb.util.MailHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,11 +31,15 @@ public class AdminLicenseService {
      * @param status 申请状态
      * @param page （第）页数
      * @param limit 每页项数
+     * @param sort 排序方式，+id / -id
      * @return com.szbldb.pojo.licensePojo.SubmissionList
      * @author Quan Li 2024/7/5 15:55
      **/
-    public SubmissionList searchSubmissions(String name, String status, Integer page, Integer limit){
-        List<Submission> list = licenseMapper.searchSubmissions(name, status, (page - 1) * limit, limit);
+    public SubmissionList searchSubmissions(String name, String status, Integer page, Integer limit, String sort){
+        List<Submission> list;
+        if(!"approved".equals(status) && !"rejected".equals(status) && !"pending".equals(status)) status = "";
+        if("-id".equals(sort)) list = licenseMapper.searchSubmissionsAsc(name, status, (page - 1) * limit, limit);
+        else list = licenseMapper.searchSubmissionsDesc(name, status, (page - 1) * limit, limit);
         SubmissionList submissionList = new SubmissionList();
         submissionList.setItems(list);
         submissionList.setTotal(list.size());
@@ -64,6 +69,8 @@ public class AdminLicenseService {
     @Transactional(rollbackFor = Exception.class)
     public void auditSubmission(Integer id, String auditor, String status, String reason){
         licenseMapper.updateSubmissionById(id, auditor, status, reason);
+        String email = licenseMapper.getEmailBySubmissionId(id);
+        MailHelper.sendAuditResult(email, status);
         logService.addLog("对下载许可进行了审批");
     }
 }

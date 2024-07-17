@@ -11,13 +11,13 @@ import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -30,8 +30,8 @@ public class DataSetUploadService {
     private final DataSetMapper dataSetMapper;
     private final LogService logService;
 
-
-    private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
+    @Value("${minio.server.address}")
+    private String ipAddress;
     private final String bucket = "test";
 
     public DataSetUploadService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService) throws UnknownHostException {

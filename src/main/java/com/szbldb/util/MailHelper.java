@@ -1,11 +1,14 @@
 package com.szbldb.util;
 
+import com.szbldb.exception.DataSetException;
+import com.szbldb.exception.LicenseException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
@@ -22,6 +25,10 @@ public class MailHelper {
     private static final String content1 = "You are visiting resources in SZBLDB.com. The captcha code is:\n";
     private static final String content2 = "\nIt's valid in 10 minutes.If it's not operated on your own, ignore the Email. \nPlease do not Reply";
     private static final Random random = new Random();
+
+    @Value("${mail.from}")
+    private String initFrom;
+    private static String from;
     private JavaMailSender initSender;
 
     @Autowired
@@ -32,6 +39,7 @@ public class MailHelper {
     @PostConstruct
     public void init(){
         mailSender = initSender;
+        from = initFrom;
     }
 
     /**
@@ -60,7 +68,7 @@ public class MailHelper {
         mail.setSubject(subject);
         mail.setText(content1 + code + content2);
         mail.setTo(email);
-        mail.setFrom("15797079817@163.com");
+        mail.setFrom(from);
         try{
             mailSender.send(mail);
         }catch (Exception e){
@@ -74,12 +82,55 @@ public class MailHelper {
 
     /**
      *
+     * @Description 管理员审批申请，向申请人发送邮件
+     * @param email 申请人邮件
+     * @param result 审批结果，approved / rejected
+     * @author Quan Li 2024/7/15 16:01
+     **/
+    public static void sendAuditResult(String email, String result){
+        SimpleMailMessage mail = new SimpleMailMessage();
+        String content;
+        if ("approved".equals(result)) {
+            content = "Your application was APPROVED. Now you can access our public data with ease! ";
+        }
+        else if("rejected".equals(result)){
+            content = "Your application was REJECTED. Please modify your application and submit again. ";
+        }
+        else throw new LicenseException("Invalid string! ");
+        mail.setSubject("Result of your data application");
+        mail.setText(content);
+        mail.setTo(email);
+        mail.setFrom(from);
+        try{
+            mailSender.send(mail);
+        }catch (Exception e){
+            log.error("邮件发送失败", e);
+            throw new LicenseException("failed to send the email");
+        }
+    }
+
+    public static void informReceiveApplication(){
+        SimpleMailMessage mail = new SimpleMailMessage();
+        mail.setSubject("Application Received");
+        mail.setText("The PETdatabase just received an application. Please check the website.");
+        mail.setTo(from);
+        mail.setFrom(from);
+        try{
+            mailSender.send(mail);
+        }catch (Exception e){
+            log.error("邮件发送失败", e);
+            throw new LicenseException("failed to send the email");
+        }
+    }
+
+    /**
+     *
      * @Description 将字符串进行 SHA256 加密
      * @param code 指定字符串
      * @return java.lang.String
      * @author Quan Li 2024/7/5 16:42
      **/
-    public static String digestSha256(String code){//get encoded string of code by md5
+    public static String digestSha256(String code){//get encoded string of code by sha256
         return DigestUtils.sha256Hex(code);
     }
 

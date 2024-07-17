@@ -13,6 +13,7 @@ import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +34,8 @@ import java.util.zip.ZipOutputStream;
 public class DataDownloadService {
 
 
-    private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
+    @Value("${minio.server.address}")
+    private String ipAddress;
     private final String bucket = "test";
 
     private final DataSetMapper dataSetMapper;
@@ -83,15 +85,18 @@ public class DataDownloadService {
      *
      * @Description 返回本地文件下载链接
      * @param id 文件 id
+     * @param username 用户名，用于检测权限
      * @return java.lang.String
      * @author Quan Li 2024/7/5 10:56
      **/
     @Transactional(rollbackFor = Exception.class)
-    public String downloadLocal(Integer id){
+    public String downloadLocal(Integer id, String username){
         DataSetLoc loc = dataSetMapper.searchLocByFileId(id);
         String filename = dataSetMapper.getFileByFileId(id).getName();
         DataSet dataSet = dataSetMapper.getDatasetByFileId(id);
-        if("private".equals(dataSet.getStatus())) return null;
+        if("private".equals(dataSet.getStatus())){
+            if(!"admin".equals(dataSetMapper.checkRole(username))) return null;
+        }
         if(loc == null) return null;
         String url = null;
         try(MinioClient client = MinioClient.builder()
@@ -121,11 +126,12 @@ public class DataDownloadService {
      *
      * @Description 返回多个文件压缩包
      * @param fileIDs 文件 id 列表
+     * @param username 用户名，用于检测权限
      * @return org.springframework.http.ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody>
      * @author Quan Li 2024/7/5 10:57
      **/
     @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<StreamingResponseBody> createZip(List<Integer> fileIDs){
+    public ResponseEntity<StreamingResponseBody> createZip(List<Integer> fileIDs, String username){
         DataSet dataSet = dataSetMapper.getDatasetByFileId(fileIDs.get(0));
         String md5 = DigestUtils.md5Hex(fileIDs.toString());
         String zipName = md5 + ".zip";
@@ -135,7 +141,9 @@ public class DataDownloadService {
                 .endpoint("http://" + ipAddress + ":9000")
                 .credentials("lqquan", "12345678")
                 .build()){
-            if("private".equals(dataSet.getStatus())) throw new DataSetException("数据集非公开");
+            if("private".equals(dataSet.getStatus())){
+                if(!"admin".equals(dataSetMapper.checkRole(username))) throw new DataSetException("数据集非公开");
+            }
             String[] names = new String[fileIDs.size()];
             int i = 0;
             for(Integer fileId : fileIDs){
@@ -170,9 +178,16 @@ public class DataDownloadService {
             };
             dataSetMapper.updateDownloads(dataSet.getId());
             return ResponseEntity.ok().headers(headers).body(streamingResponseBody);
-        }catch (Exception e){
+        }catch (Exception e) {
             log.error("流式返回压缩包文件失败", e);
-            return ResponseEntity.noContent().build();
+            for(InputStream stream : streams){
+                try{
+                    stream.close();
+                }catch (IOException ioe){
+                    log.warn("failed to close InputStream from Minio");
+                }
+            }
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 }

@@ -78,17 +78,20 @@ public interface ExtensionMapper {
     @Delete("delete from coll_dset where cid = #{cid} and did = #{did}")
     void deleteDatasetFromColl(Integer did, Integer cid);
 
-    @Insert("insert into news (content, image_src, link) value (#{news.content}, #{news.imageSrc}, #{news.link})")
+    @Insert("insert into news (content, image_src, link) value (#{content}, #{imageSrc}, #{link})")
     void createNews(News news);
 
     @Results({
             @Result(column = "image_src", property = "imageSrc")
     })
-    @Select("select nid, image_src, content, link from news")
-    List<News> getNews();
+    @Select("select nid, image_src, content, link from news limit #{limit} offset #{offset}")
+    List<News> getNews(Integer offset, Integer limit);
 
     @Select("select image_src from news where nid = #{nid}")
     String getNewsSrcByNid(Integer nid);
+
+    @Select("select count(nid) from news")
+    Integer getNewsCount();
 
     @Delete("delete from news where nid = #{nid}")
     void deleteNews(Integer nid);

@@ -31,19 +31,12 @@ public class AdminCheckInterceptor implements HandlerInterceptor {
         if(token == null || token.isEmpty()) return false;
         String username = JWTHelper.getUsername(token);
         if(!"admin".equals(userMapper.getRolesByUsername(username))){
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             Result error = Result.error("Not_Admin", 52002);
             String notAdmin = JSONObject.toJSONString(error);
             response.getWriter().write(notAdmin);
             return false;
         }
-        String ipAddress = request.getRemoteAddr();
-        String curAddr = userMapper.checkIpAddrOfAdmin(username);
-        if(ipAddress.equals(curAddr) && token.equals(userMapper.checkTokenOfAdmin(username))){
-            return true;
-        }
-        log.warn("Admin 异地登录或令牌失效：" + ipAddress);
-        Result logout = Result.error("You have been logged out.");
-        response.getWriter().write(JSONObject.toJSONString(logout));
-        return false;
+        return true;
     }
 }

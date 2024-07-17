@@ -1,6 +1,7 @@
 package com.szbldb.service.userService;
 
 import com.szbldb.dao.UserMapper;
+import com.szbldb.exception.UserException;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.util.JWTHelper;
 import com.szbldb.util.MailHelper;
@@ -10,6 +11,7 @@ import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +26,12 @@ import java.util.concurrent.TimeUnit;
 public class UserInfoService {
 
     private final UserMapper userMapper;
-    private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
+
+    @Value("${minio.server.address}")
+    private String ipAddress;
 
 
-    public UserInfoService(@Autowired UserMapper userMapper) throws UnknownHostException {
+    public UserInfoService(@Autowired UserMapper userMapper){
         this.userMapper = userMapper;
     }
 
@@ -138,6 +142,8 @@ public class UserInfoService {
     public String uploadAvatar(String token, String avatar) throws Exception {
         String username = JWTHelper.getUsername(token);
         Integer id = userMapper.getIdByName(username);
+        if(!avatar.endsWith(".jpg") && !avatar.endsWith(".png") && !avatar.endsWith(".jpeg"))
+            throw new UserException("Invalid file!");
         try(MinioClient client = MinioClient.builder()
                 .endpoint("http://" + ipAddress + ":9000")
                 .credentials("lqquan", "12345678")

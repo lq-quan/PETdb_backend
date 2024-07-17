@@ -2,6 +2,7 @@ package com.szbldb.service.licenseService;
 
 import com.szbldb.dao.LicenseMapper;
 import com.szbldb.pojo.licensePojo.Submission;
+import com.szbldb.util.MailHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ public class ClientLicenseService {
         submission.setDate(LocalDate.now());
         licenseMapper.createApplication(submission);
         licenseMapper.appendUserAppl(username, submission.getId());
+        MailHelper.informReceiveApplication();
         return true;
     }
 
@@ -60,6 +62,7 @@ public class ClientLicenseService {
         submission.setDate(LocalDate.now());
         licenseMapper.updateApplicationByUsername(submission, username);
         licenseMapper.updateSubmissionById(sid, null, "pending", null);
+        MailHelper.informReceiveApplication();
         return true;
     }
 

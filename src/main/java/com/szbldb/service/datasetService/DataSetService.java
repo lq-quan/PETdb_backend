@@ -11,11 +11,9 @@ import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.net.InetAddress;
-
-import java.net.UnknownHostException;
 import java.util.List;
 
 
@@ -27,10 +25,11 @@ public class DataSetService {
     private final LogService logService;
 
 
-    private final String ipAddress = InetAddress.getLocalHost().getHostAddress();
+    @Value("${minio.server.address}")
+    private String ipAddress;
     private final String bucket = "test";
 
-    public DataSetService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService) throws UnknownHostException {
+    public DataSetService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService){
         this.logService = logService;
         this.dataSetMapper = dataSetMapper;
     }
@@ -61,12 +60,12 @@ public class DataSetService {
         for(DataSet ds : dataSets){
             ds.setFiles(dataSetMapper.getFilesByDatasetId(ds.getId()));
         }
-        return new DataSetList(dataSets.size(), dataSets);
+        return new DataSetList(dataSetMapper.getDataSetCounts(), dataSets);
     }
 
     /**
      *
-     * @Description 根据关键词搜索列表
+     * @Description 根据关键词搜索数据集列表
      * @param word 关键词
      * @return com.szbldb.pojo.datasetPojo.DataSetList
      * @author Quan Li 2024/7/5 11:00

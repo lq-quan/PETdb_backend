@@ -25,6 +25,7 @@ public class EmailCheckInterceptor implements HandlerInterceptor {
         String token = request.getHeader("token");
         String username = JWTHelper.getUsername(token);
         if(licenseMapper.checkIfVerifiedByUsername(username) > 0){
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             Result verified = Result.error("You don't need to verify email!", 50102);
             String json = JSONObject.toJSONString(verified);
             response.getWriter().write(json);

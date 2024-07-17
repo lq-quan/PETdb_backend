@@ -17,4 +17,7 @@ public interface LogsMapper {
 
     @Insert("insert into logs (time, operation, operator) value (#{time}, #{operation}, #{operator})")
     void insertLog(Operation operation);
+
+    @Select("select count(username) from admins where binary username = #{username}")
+    Integer checkIfAdmin(String username);
 }

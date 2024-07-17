@@ -145,7 +145,7 @@ public class ClientLicenseController {
      **/
     @PostMapping("/PETdatabase/dataset/license/update")
     public Result updateApplication(@RequestBody Submission submission, @RequestHeader String token){
-        //System.out.println(submission);
+        System.out.println(submission);
         String username = JWTHelper.getUsername(token);
         if(!clientLicenseService.checkIfVerified(username)){
             return Result.error("Email validation failed or expired!", 52004);

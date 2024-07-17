@@ -16,12 +16,12 @@ public interface LicenseMapper {
             "#{date}, #{address.country}, #{address.province}, #{address.city}, #{address.street}, #{address.pscode})")
     void createApplication(Submission submission);
 
-    @Update("update submission inner join user_appl ua set firstname = #{firstname}, lastname = #{lastname}, " +
-            "degree = #{degree}, company = #{company}, department = #{department}, " +
-            "contact = #{contact}, purpose = #{purpose}, date = #{date}, country = #{address.country}, " +
-            "province = #{address.province}, city = #{address.city}, street = #{address.street}, pscode = #{address.pscode} " +
+    @Update("update submission inner join user_appl ua set firstname = #{s.firstname}, lastname = #{s.lastname}, " +
+            "degree = #{s.degree}, company = #{s.company}, department = #{s.department}, " +
+            "contact = #{s.contact}, purpose = #{s.purpose}, date = #{s.date}, country = #{s.address.country}, " +
+            "province = #{s.address.province}, city = #{s.address.city}, street = #{s.address.street}, pscode = #{s.address.pscode} " +
             "where id = ua.sid and ua.username = #{username}")
-    void updateApplicationByUsername(Submission submission, String username);
+    void updateApplicationByUsername(Submission s, String username);
 
     @Select("select * from submission where id = #{sid}")
     @Results({
@@ -42,8 +42,8 @@ public interface LicenseMapper {
     @Select("select count(*) from email_status e inner join user u on u.id = e.id and u.username = #{username}")
     Integer checkIfVerifiedByUsername(String username);
 
-    @Select("select count(username) from admins where binary username = #{username}")
-    Integer checkIfAdmin(String username);
+    @Select("select email from user inner join user_appl on user.id = user_appl.uid and user_appl.sid = #{sid}")
+    String getEmailBySubmissionId(Integer sid);
 
     @Insert("insert into user_appl select #{sid} as 'sid', id as 'uid', username from user where binary username = #{username}")
     void appendUserAppl(String username, Integer sid);
@@ -55,9 +55,13 @@ public interface LicenseMapper {
     String getStatusByUsername(String username);
 
 
-    @Select("select * from submission where firstname like '%${name}%' or lastname like '%${name}%' and status = #{status} " +
-            "limit #{limit} offset #{offset}")
-    List<Submission> searchSubmissions(String name, String status, Integer offset, Integer limit);
+    @Select("select * from submission where status = #{status} and (firstname like '%${name}%' or lastname like '%${name}%') " +
+            "order by id limit #{limit} offset #{offset}")
+    List<Submission> searchSubmissionsAsc(String name, String status, Integer offset, Integer limit);
+
+    @Select("select * from submission where (firstname like '%${name}%' or lastname like '%${name}%') and status like '%${status}%' " +
+            "order by id desc limit #{limit} offset #{offset}")
+    List<Submission> searchSubmissionsDesc(String name, String status, Integer offset, Integer limit);
 
 
     @Update("update submission set status = #{status}, reason = #{reason}, auditor = #{auditor} where id = #{id}")

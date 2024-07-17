@@ -28,6 +28,9 @@ public interface DataSetMapper {
             " or description like '%${word}%' collate utf8mb4_general_ci")
     List<DataSet> searchGlobal(String word);
 
+    @Select("select roles from userinfo ui inner join user us on ui.id = us.id and binary us.username = #{username}")
+    String checkRole(String username);
+
     @Select("select * from dataset_loc d inner join files f where f.id = #{id} and d.id = f.datasetId")
     DataSetLoc searchLocByFileId(Integer id);
 
@@ -60,6 +63,9 @@ public interface DataSetMapper {
 
     @Select("select * from dataset inner join files f on dataset.id = f.datasetId and f.id = #{id}")
     DataSet getDatasetByFileId(Integer id);
+
+    @Select("select count(id) from dataset")
+    Integer getDataSetCounts();
 
     @Select("select count(*) from files where datasetId = #{datasetId}")
     Integer getFileNums(Integer datasetId);

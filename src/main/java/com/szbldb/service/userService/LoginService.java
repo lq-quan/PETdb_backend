@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class LoginService {
@@ -55,7 +56,7 @@ public class LoginService {
     //@Transactional(rollbackFor = Exception.class)
     public void updateAdmin(String username, String ipAddress, String token){
         logService.setUser(username);
-        logService.addLog("成功：管理员 " + username + " 登录");
+        logService.addLog("成功：管理员 " + username + " 登录，IP：" + ipAddress);
         Date expireTime = new Date(System.currentTimeMillis() + 24 * 3600 * 1000L);
         userMapper.updateAdmin(username, ipAddress, token, expireTime);
     }
@@ -84,4 +85,5 @@ public class LoginService {
     public String getEmail(String username) {
         return userMapper.getEmail(username);
     }
+
 }
