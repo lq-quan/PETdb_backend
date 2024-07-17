@@ -27,6 +27,7 @@ public class MailHelper {
 
     @Value("${mail.from}")
     private String initFrom;
+
     private static String from;
     private JavaMailSender initSender;
 

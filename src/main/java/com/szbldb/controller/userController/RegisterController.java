@@ -107,7 +107,7 @@ public class RegisterController {
         if(page == null) page = 1;
         if(limit == null) limit = 20;
         String username = JWTHelper.getUsername(token);
-        if(!"admin".equals(username)) return Result.error("Not_Root", 52002);
+        if(!"admin".equals(username)) return Result.error("You are not allowed to manage admin-accounts", 52002);
         return Result.success(registerService.getAdmins(page, limit));
     }
 
@@ -122,7 +122,7 @@ public class RegisterController {
     @PostMapping("/PETdatabase/user/admin/accounts/create")
     public Result createAdmin(@RequestHeader String token, @RequestBody User user){
         String username = JWTHelper.getUsername(token);
-        if(!"admin".equals(username)) return Result.error("Not_Root", 52002);
+        if(!"admin".equals(username)) return Result.error("You are not allowed to manage admin-accounts", 52002);
         if(registerService.createAdmin(user)) return Result.success();
         else return Result.error("Failed to create. There may be duplicate username", 52008);
     }
@@ -138,7 +138,7 @@ public class RegisterController {
     @DeleteMapping("/PETdatabase/user/admin/accounts/delete")
     public Result deleteAdmin(@RequestHeader String token, Integer id){
         String username = JWTHelper.getUsername(token);
-        if(!"admin".equals(username)) return Result.error("Not_Root", 52002);
+        if(!"admin".equals(username)) return Result.error("You are not allowed to manage admin-accounts", 52002);
         try{
             registerService.deleteAdmin(id);
         }catch (UserException e){
