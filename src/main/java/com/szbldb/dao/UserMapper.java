@@ -50,11 +50,14 @@ public interface UserMapper {
     void changeAvatarById(Integer id, String avatar);
 
     @Update("update admins set ip_address = #{ipAddress}, cur_token = #{token}, expire_time = #{expireTime}" +
-            " where username = #{username}")
+            " where binary username = #{username}")
     void updateAdmin(String username, String ipAddress, String token, Date expireTime);
 
     @Select("select ip_address from admins where binary username = #{username}")
     String checkIpAddrOfAdmin(String username);
+
+    @Update("update userinfo set roles = 'admin' where id in (select u.id from user u where u.username = #{username})")
+    void changeRolesByUsername(String username);
 
     @Select("select cur_token from admins where binary username = #{username}")
     String checkTokenOfAdmin(String username);
@@ -66,7 +69,7 @@ public interface UserMapper {
     @Insert("insert into admins (username) value (#{username})")
     void insertAdmin(String username);
 
-    @Delete("delete from admins where username in (select username from user where id = #{id})")
+    @Delete("delete from admins where binary username in (select username from user where id = #{id})")
     void deleteAdminById(Integer id);
 
     @Delete("delete from userinfo where id = #{id}")
@@ -74,4 +77,10 @@ public interface UserMapper {
 
     @Delete("delete from user where id = #{id}")
     void deleteUser(Integer id);
+
+    @Delete("delete from coll_dset where cid in (select id as cid from collection where uid = #{uid})")
+    void clearColl(Integer uid);
+
+    @Delete("delete from collection where uid = #{uid}")
+    void deleteColl(Integer uid);
 }

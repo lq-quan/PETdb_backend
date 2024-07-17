@@ -1,5 +1,6 @@
 package com.szbldb.controller.userController;
 
+import com.szbldb.exception.UserException;
 import com.szbldb.pojo.Result;
 import com.szbldb.pojo.userPojo.User;
 import com.szbldb.pojo.userPojo.UserPojo;
@@ -101,7 +102,10 @@ public class RegisterController {
      * @author Quan Li 2024/7/17 10:37
      **/
     @GetMapping("/PETdatabase/user/admin/accounts/list")
-    public Result getAdmins(@RequestHeader String token, Integer page, Integer limit){
+    public Result getAdmins(@RequestHeader String token, @RequestParam(required = false) Integer page,
+                            @RequestParam(required = false) Integer limit){
+        if(page == null) page = 1;
+        if(limit == null) limit = 20;
         String username = JWTHelper.getUsername(token);
         if(!"admin".equals(username)) return Result.error("Not_Root", 52002);
         return Result.success(registerService.getAdmins(page, limit));
@@ -120,7 +124,7 @@ public class RegisterController {
         String username = JWTHelper.getUsername(token);
         if(!"admin".equals(username)) return Result.error("Not_Root", 52002);
         if(registerService.createAdmin(user)) return Result.success();
-        else return Result.error("failed to create", 52008);
+        else return Result.error("Failed to create. There may be duplicate username", 52008);
     }
 
     /**
@@ -135,7 +139,11 @@ public class RegisterController {
     public Result deleteAdmin(@RequestHeader String token, Integer id){
         String username = JWTHelper.getUsername(token);
         if(!"admin".equals(username)) return Result.error("Not_Root", 52002);
-        registerService.deleteAdmin(id);
+        try{
+            registerService.deleteAdmin(id);
+        }catch (UserException e){
+            return Result.error("Delete failed", 52008);
+        }
         return Result.success();
     }
 }

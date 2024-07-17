@@ -39,7 +39,7 @@ public class ClientLicenseController {
         }
         if(clientLicenseService.createApplication(submission, username))
             return Result.success();
-        else return Result.error("Application already exists!", 52003);
+        else return Result.error("Application already exists! (admins don't need to apply for data)", 52003);
     }
 
     /**

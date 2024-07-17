@@ -1,6 +1,5 @@
 package com.szbldb.util;
 
-import com.szbldb.exception.DataSetException;
 import com.szbldb.exception.LicenseException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -50,8 +49,8 @@ public class MailHelper {
      * @author Quan Li 2024/7/5 16:42
      **/
     public static String sendEmail(String email, String username){
-        String code = "123456";
-        /*StringBuilder code = new StringBuilder();
+        //String code = "123456";
+        StringBuilder code = new StringBuilder();
         int last = -1;
         int[] rec = new int[10];
         for(int i = 0; i < 6; i++){
@@ -74,7 +73,7 @@ public class MailHelper {
         }catch (Exception e){
             log.error("邮件发送失败", e);
             return null;
-        }*/
+        }
         System.out.println("邮件发送完毕！To: " + email);
         System.out.println(code);
         return digestSha256(code + username);

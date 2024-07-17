@@ -54,6 +54,9 @@ public interface LicenseMapper {
     @Select("select status from submission inner join user_appl ua on submission.id = ua.sid and ua.username = #{username}")
     String getStatusByUsername(String username);
 
+    @Select("select roles from userinfo inner join user u on userinfo.id = u.id and u.username = #{username}")
+    String checkRoleByUsername(String username);
+
 
     @Select("select * from submission where status = #{status} and (firstname like '%${name}%' or lastname like '%${name}%') " +
             "order by id limit #{limit} offset #{offset}")

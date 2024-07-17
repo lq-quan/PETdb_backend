@@ -28,6 +28,7 @@ public class ClientLicenseService {
      **/
     @Transactional(rollbackFor = Exception.class)
     public boolean createApplication(Submission submission, String username){
+        if("admin".equals(licenseMapper.checkRoleByUsername(username))) return false;
         if(licenseMapper.getSid(username) != null) return false;
         submission.setDate(LocalDate.now());
         licenseMapper.createApplication(submission);

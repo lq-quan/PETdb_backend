@@ -1,6 +1,7 @@
 package com.szbldb.service.userService;
 
 import com.szbldb.dao.UserMapper;
+import com.szbldb.exception.UserException;
 import com.szbldb.pojo.userPojo.User;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.service.logService.LogService;
@@ -34,7 +35,7 @@ public class RegisterService {
      **/
     public boolean checkIfExisted(String username){
         if(username.length() > 50 || "default".equals(username)) return false;
-        return userMapper.getIdByName(username) == 0;
+        return userMapper.getIdByName(username) == null;
     }
 
     /**
@@ -82,6 +83,7 @@ public class RegisterService {
         if(!checkIfExisted(username)) return false;
         String encodedPsw = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
         signup(username, encodedPsw, user.getEmail());
+        userMapper.changeRolesByUsername(username);
         userMapper.insertAdmin(username);
         logService.addLog("创建管理员账号：" + username);
         return true;
@@ -95,9 +97,16 @@ public class RegisterService {
      **/
     @Transactional(rollbackFor = Exception.class)
     public void deleteAdmin(Integer id){
+        if("admin".equals(userMapper.getUsernameById(id))) {
+            log.warn("试图删除 root 用户");
+            throw new UserException("Cannot delete root");
+        }
+        String username = userMapper.getUsernameById(id);
+        userMapper.clearColl(id);
+        userMapper.deleteColl(id);
         userMapper.deleteAdminById(id);
         userMapper.deleteUserinfo(id);
         userMapper.deleteUser(id);
-        logService.addLog("回收管理员账号：" + userMapper.getUsernameById(id));
+        logService.addLog("回收管理员账号：" + username);
     }
 }
