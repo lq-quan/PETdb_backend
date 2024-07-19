@@ -27,7 +27,12 @@ public class DataSetService {
 
     @Value("${minio.server.address}")
     private String ipAddress;
-    private final String bucket = "test";
+    @Value("${minio.access-key}")
+    private String accessKey;
+    @Value("${minio.secret-key}")
+    private String secretKey;
+    @Value("${minio.bucket}")
+    private String bucket;
 
     public DataSetService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService){
         this.logService = logService;
@@ -110,8 +115,8 @@ public class DataSetService {
         DataSet dataSet = dataSetMapper.getDatasetById(datasetId);
         String objectName = dataSet.getType() + "/" + dataSet.getName() + "/" + deletedFile.getName();
         try(MinioClient client = MinioClient.builder()
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("lqquan", "12345678")
+                .endpoint("https://" + ipAddress)
+                .credentials(accessKey, secretKey)
                 .build()){
             client.removeObject(RemoveObjectArgs.builder()
                     .bucket(bucket)
@@ -174,8 +179,8 @@ public class DataSetService {
         dataSetMapper.deleteCollDset(id);
         if("local".equals(dataSet.getStatus())){
             try(MinioClient client = MinioClient.builder()
-                    .endpoint("http://" + ipAddress + ":9000")
-                    .credentials("lqquan", "12345678")
+                    .endpoint("https://" + ipAddress)
+                    .credentials(accessKey, secretKey)
                     .build()){
                 client.removeObject(RemoveObjectArgs.builder()
                         .bucket(bucket)

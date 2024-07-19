@@ -9,6 +9,7 @@ import com.szbldb.util.JWTHelper;
 import com.szbldb.util.MailHelper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -35,13 +36,16 @@ public class RegisterController {
     @PostMapping(value = "/PETdatabase/register/checkUserInfo")
     public Result checkUsername(@RequestBody UserPojo userPojo){
         String username = userPojo.getUsername(), password = userPojo.getPassword(), email = userPojo.getEmail();
-        if(username == null || email == null || username.isEmpty() || email.isEmpty() || password.length() != 64){
+        if(username == null || email == null || username.isEmpty() || email.isEmpty() || password == null){
             return Result.error("Invalid data!", 50101);
         }
-        System.out.println(username + ":" + password);
+        password = registerService.decodeRSAPsw(password);
+        if(registerService.checkPswIfWeak(password)){
+            return Result.error("Password is too weak or invalid!", 50104);
+        }
         Map<String, Object> map = new HashMap<>();
         if(this.registerService.checkIfExisted(username)){
-            password = BCrypt.hashpw(password, BCrypt.gensalt());
+            password = DigestUtils.sha256Hex( password+ "petdatabase");
             map.put("username", username);
             map.put("password", password);
             map.put("email", email);
@@ -53,7 +57,7 @@ public class RegisterController {
             map.put("code", code);
             String jwtCode = JWTHelper.jwtPacker(map, 10);
             return Result.success(jwtCode);
-            //jwtCode:包括username, password密文, email, 生成的code
+            //jwtCode:包括username, password的SHA256密文, email, 生成的code
         }
         else
             return Result.error("Failed to send code. Please check the email.");
@@ -79,6 +83,7 @@ public class RegisterController {
             }
             String username = claimsCode.get("username", String.class);
             String password = claimsCode.get("password", String.class);
+            password = BCrypt.hashpw(password, BCrypt.gensalt());
             String email = claimsCode.get("email", String.class);
             if(email == null || email.isEmpty())
                 return Result.error("Please verify your email address first!");
@@ -89,7 +94,7 @@ public class RegisterController {
                 return Result.error("Failed to sign up. It may because someone occupied the username just now. Please try to sign up again.");
         }
         else
-            return Result.error("Code is wrong or expired!");
+            return Result.error("Code is wrong or expired!", 52002);
     }
 
     /**

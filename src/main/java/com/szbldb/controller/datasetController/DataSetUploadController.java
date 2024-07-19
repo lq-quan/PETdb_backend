@@ -46,12 +46,7 @@ public class DataSetUploadController {
         return Result.error("Exist dataset with the same name!", 40004);
     }
 
-    /**
-     *
-     * @Description 无参方法，获取用于往OSS上传数据的 STSToken
-     * @return com.szbldb.pojo.Result
-     * @author Quan Li 2024/7/4 15:11
-     **/
+
     /*@RequestMapping("/PETdatabase/dataset/manage/uploadtoken")
     public Result getStsToken(){
         StsTokenInfo tokenInfo = dataSetUploadService.datasetUpload();
@@ -73,15 +68,7 @@ public class DataSetUploadController {
         return Result.success();
     }
 
-    /**
-     *
-     * @param id 数据集 id
-     * @param name 文件名
-     * @param type 文件类型
-     * @param size 文件大小
-     * @return com.szbldb.pojo.Result
-     * @author Quan Li 2024/7/4 15:15
-     **/
+
     /*@RequestMapping("/PETdatabase/dataset/manage/callback")
     public Result uploadFile(Integer id, String name, String type, Long size){
         if(name != null && name.length() > 100) return Result.error("Name too long! (more than 100 characters)", 40012);

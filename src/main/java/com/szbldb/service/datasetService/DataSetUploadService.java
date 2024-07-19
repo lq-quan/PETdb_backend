@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
-import java.net.UnknownHostException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,19 +31,19 @@ public class DataSetUploadService {
 
     @Value("${minio.server.address}")
     private String ipAddress;
-    private final String bucket = "test";
+    @Value("${minio.access-key}")
+    private String accessKey;
+    @Value("${minio.secret-key}")
+    private String secretKey;
+    @Value("${minio.bucket}")
+    private String bucket;
 
-    public DataSetUploadService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService) throws UnknownHostException {
+    public DataSetUploadService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService){
         this.logService = logService;
         this.dataSetMapper = dataSetMapper;
     }
 
-    /**
-     * 
-     * @Description 无参方法，获取STSToken，上传文件到 OSS
-     * @return com.szbldb.pojo.datasetPojo.StsTokenInfo
-     * @author Quan Li 2024/7/5 11:09
-     **/
+
     /*public StsTokenInfo datasetUpload(){
         String endpoint = "sts.cn-shenzhen.aliyuncs.com";
         String accessKeyId = System.getenv("OSS_ACCESS_KEY_ID");
@@ -185,8 +184,8 @@ public class DataSetUploadService {
         if(origin == null){
             String object = toDataset.getType() + "/" + toDataset.getName() + "/" + part.getFileMd5();
             try(MinioClient client = MinioClient.builder()
-                    .endpoint("http://" + ipAddress + ":9000")
-                    .credentials("lqquan", "12345678")
+                    .endpoint("https://" + ipAddress)
+                    .credentials(accessKey, secretKey)
                     .build()){
                 int i = 1;
                 while(true){
@@ -207,8 +206,8 @@ public class DataSetUploadService {
             String toObject = toDataset.getType() + "/" + toDataset.getName() + "/" + part.getFileName();
             String originFileObject = dataSet.getType() + "/" + dataSet.getName() + "/" + origin.getName();
             try(MinioClient client = MinioClient.builder()
-                    .endpoint("http://" + ipAddress + ":9000")
-                    .credentials("lqquan", "12345678")
+                    .endpoint("https://" + ipAddress)
+                    .credentials(accessKey, secretKey)
                     .build()){
                 client.copyObject(CopyObjectArgs.builder()
                         .bucket(bucket)
@@ -246,8 +245,8 @@ public class DataSetUploadService {
         DataSet dataSet = dataSetMapper.getDatasetById(part.getId());
         String object = dataSet.getType() + "/" + dataSet.getName() + "/" + part.getFileMd5();
         try(MinioClient client = MinioClient.builder()
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("lqquan", "12345678")
+                .endpoint("https://" + ipAddress)
+                .credentials(accessKey, secretKey)
                 .build()){
             long chunkCount = part.getFileSize() / part.getChunkSize() + 1;
             if(part.getFileSize() % part.getChunkSize() == 0) chunkCount--;
@@ -284,8 +283,8 @@ public class DataSetUploadService {
         String type, md5;
         long size;
         try(MinioClient client = MinioClient.builder()
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("lqquan", "12345678")
+                .endpoint("https://" + ipAddress)
+                .credentials(accessKey, secretKey)
                 .build()){
             List<ComposeSource> sources = new ArrayList<>();
             int i = 1;

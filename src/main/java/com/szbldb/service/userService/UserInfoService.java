@@ -15,8 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +28,12 @@ public class UserInfoService {
 
     @Value("${minio.server.address}")
     private String ipAddress;
+    @Value("${minio.access-key}")
+    private String accessKey;
+    @Value("${minio.secret-key}")
+    private String secretKey;
+    @Value("${minio.bucket}")
+    private String bucket;
 
 
     public UserInfoService(@Autowired UserMapper userMapper){
@@ -49,12 +54,12 @@ public class UserInfoService {
         String avatar = info.getAvatar();
         if(avatar == null) avatar = "default.jpg";
         try(MinioClient client = MinioClient.builder()
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("lqquan", "12345678")
+                .endpoint("https://" + ipAddress)
+                .credentials(accessKey, secretKey)
                 .build()){
             String avatarUrl =  client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                     .method(Method.GET)
-                    .bucket("test")
+                    .bucket(bucket)
                     .object("images/" + avatar)
                     .expiry(24, TimeUnit.HOURS)
                     .build());
@@ -145,13 +150,13 @@ public class UserInfoService {
         if(!avatar.endsWith(".jpg") && !avatar.endsWith(".png") && !avatar.endsWith(".jpeg"))
             throw new UserException("Invalid file!");
         try(MinioClient client = MinioClient.builder()
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("lqquan", "12345678")
+                .endpoint("https://" + ipAddress)
+                .credentials(accessKey, secretKey)
                 .build()){
             String newAvatar = username + avatar.substring(avatar.lastIndexOf("."));
             String url =  client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                     .method(Method.PUT)
-                    .bucket("test")
+                    .bucket(bucket)
                     .object("images/" + newAvatar)
                     .expiry(1, TimeUnit.HOURS)
                     .build());

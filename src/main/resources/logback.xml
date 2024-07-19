@@ -12,7 +12,7 @@
         </encoder>
     </appender>
 
-    <property name="log_dir" value="D:/logs"/>
+    <property name="log_dir" value="/logs"/>
 
     <appender name="rollFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${log_dir}/roll_logback.log</file>

@@ -30,12 +30,7 @@ public class DataDownloadController {
         this.dataDownloadService = dataDownloadService;
     }
 
-    /**
-     * 
-     * @param id 文件id
-     * @return com.szbldb.pojo.Result
-     * @author Quan Li 2024/7/3 17:56
-     **/
+
     /*@RequestMapping("/PETdatabase/dataset/download")
     public Result dataDownload(Integer id){
         System.out.println("File id: " + id);

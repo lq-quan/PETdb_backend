@@ -25,6 +25,12 @@ public class NewsService {
 
     @Value("${minio.server.address}")
     private String ipAddress;
+    @Value("${minio.access-key}")
+    private String accessKey;
+    @Value("${minio.secret-key}")
+    private String secretKey;
+    @Value("${minio.bucket}")
+    private String bucket;
     @Autowired
     public NewsService(ExtensionMapper extensionMapper){
         this.extensionMapper = extensionMapper;
@@ -44,11 +50,11 @@ public class NewsService {
         String imageName = image.getOriginalFilename();
         long size = image.getSize();
         try(MinioClient client = MinioClient.builder()
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("lqquan", "12345678")
+                .endpoint("https://" + ipAddress)
+                .credentials(accessKey, secretKey)
                 .build()){
             client.putObject(
-                    PutObjectArgs.builder().bucket("test").object("news/" + imageName).stream(
+                    PutObjectArgs.builder().bucket(bucket).object("news/" + imageName).stream(
                                     image.getInputStream(), size, -1)
                             .contentType(image.getContentType())
                             .build());
@@ -73,14 +79,14 @@ public class NewsService {
     public NewsListRes getNews(Integer page, Integer limit){
         List<News> list = extensionMapper.getNews((page - 1) * limit, limit);
         try(MinioClient client = MinioClient.builder()
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("lqquan", "12345678")
+                .endpoint("https://" + ipAddress)
+                .credentials(accessKey, secretKey)
                 .build()) {
             for(News news : list){
-                String imageSrc =client.getPresignedObjectUrl(
+                String imageSrc = client.getPresignedObjectUrl(
                         GetPresignedObjectUrlArgs.builder()
                                 .method(Method.GET)
-                                .bucket("test")
+                                .bucket(bucket)
                                 .object("news/" + news.getImageSrc())
                                 .expiry(24, TimeUnit.HOURS)
                                 .build());
@@ -107,11 +113,11 @@ public class NewsService {
     public boolean deleteNews(Integer nid){
         String imageName = extensionMapper.getNewsSrcByNid(nid);
         try(MinioClient client = MinioClient.builder()
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("lqquan", "12345678")
+                .endpoint("https://" + ipAddress)
+                .credentials(accessKey, secretKey)
                 .build()) {
             client.removeObject(
-                    RemoveObjectArgs.builder().bucket("test").object("news/" + imageName).build());
+                    RemoveObjectArgs.builder().bucket(bucket).object("news/" + imageName).build());
         }catch (Exception e){
             log.error("删除新闻图片失败");
             return false;

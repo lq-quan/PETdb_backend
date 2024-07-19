@@ -21,8 +21,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
@@ -36,23 +34,23 @@ public class DataDownloadService {
 
     @Value("${minio.server.address}")
     private String ipAddress;
-    private final String bucket = "test";
+
+    @Value("${minio.access-key}")
+    private String accessKey;
+    @Value("${minio.secret-key}")
+    private String secretKey;
+    @Value("${minio.bucket}")
+    private String bucket;
 
     private final DataSetMapper dataSetMapper;
     private final LogService logService;
 
-    public DataDownloadService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService) throws UnknownHostException {
+    public DataDownloadService(@Autowired DataSetMapper dataSetMapper, @Autowired LogService logService){
         this.logService = logService;
         this.dataSetMapper = dataSetMapper;
     }
 
-    /**
-     *
-     * @Description 返回 OSS 文件下载链接
-     * @param fileId 文件 id
-     * @return java.net.URL
-     * @author Quan Li 2024/7/5 10:54
-     **/
+
     /*@Transactional(rollbackFor = Exception.class)
     public URL dataDownload(Integer fileId){
         DataSetLoc dataSetLoc = dataSetMapper.searchLocByFileId(fileId);
@@ -100,8 +98,8 @@ public class DataDownloadService {
         if(loc == null) return null;
         String url = null;
         try(MinioClient client = MinioClient.builder()
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("lqquan", "12345678")
+                .endpoint("https://" + ipAddress)
+                .credentials(accessKey, secretKey)
                 .build()){
             Map<String, String> reqParams = new HashMap<>();
             reqParams.put("response-content-type", "application/x-msdownload");
@@ -138,8 +136,8 @@ public class DataDownloadService {
         List<InputStream> streams = new ArrayList<>();
         DataSetLoc loc = dataSetMapper.searchLocByDatasetId(dataSet.getId());
         try(MinioClient client = MinioClient.builder()
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("lqquan", "12345678")
+                .endpoint("https://" + ipAddress)
+                .credentials(accessKey, secretKey)
                 .build()){
             if("private".equals(dataSet.getStatus())){
                 if(!"admin".equals(dataSetMapper.checkRole(username))) throw new DataSetException("数据集非公开");

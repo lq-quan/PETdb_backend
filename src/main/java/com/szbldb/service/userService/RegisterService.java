@@ -6,11 +6,18 @@ import com.szbldb.pojo.userPojo.User;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.service.logService.LogService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.crypto.Cipher;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
 import java.util.List;
 
 
@@ -20,6 +27,8 @@ public class RegisterService {
 
     private final UserMapper userMapper;
     private final LogService logService;
+    @Value("${rsa.private-key}")
+    private String privateKey;
 
     @Autowired
     public RegisterService(UserMapper userMapper, LogService logService) {
@@ -36,6 +45,48 @@ public class RegisterService {
     public boolean checkIfExisted(String username){
         if(username.length() > 50 || "default".equals(username)) return false;
         return userMapper.getIdByName(username) == null;
+    }
+
+    /**
+     *
+     * @Description 检查密码明文强度
+     * @param password 密码明文
+     * @return boolean
+     * @author Quan Li 2024/7/18 10:38
+     **/
+    public boolean checkPswIfWeak(String password){
+        boolean numFlag = false, charFlag = false;
+        if(password.length() < 10) return true;
+        for(char ch : password.toCharArray()){
+            if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) charFlag = true;
+            else if(ch >= '0' && ch <= '9') numFlag = true;
+            else if(ch != '_' && ch != ' ') return true;
+        }
+        return !numFlag || !charFlag;
+    }
+
+    /**
+     *
+     * @Description 解密 RSA 密码
+     * @param encoded 密码 RSA 密文
+     * @return java.lang.String
+     * @author Quan Li 2024/7/18 11:04
+     **/
+    public String decodeRSAPsw(String encoded){
+        byte[] encodedBytes = Base64.getDecoder().decode(privateKey);
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(encodedBytes);
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PrivateKey privateKey = keyFactory.generatePrivate(spec);
+            Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+            byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encoded));
+            String originPsw = new String(decryptedBytes);
+            System.out.println(originPsw);
+            return originPsw;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -70,6 +121,7 @@ public class RegisterService {
         return userMapper.getAdmins(limit, (page - 1) * limit);
     }
 
+
     /**
      *
      * @Description 创建管理员账号
@@ -81,7 +133,10 @@ public class RegisterService {
     public boolean createAdmin(User user){
         String username = user.getUsername();
         if(!checkIfExisted(username)) return false;
-        String encodedPsw = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
+        String originPsw = decodeRSAPsw(user.getPassword());
+        System.out.println(originPsw);
+        if(checkPswIfWeak(originPsw)) return false;
+        String encodedPsw = BCrypt.hashpw(DigestUtils.sha256Hex(originPsw + "petdatabase"), BCrypt.gensalt());
         signup(username, encodedPsw, user.getEmail());
         userMapper.changeRolesByUsername(username);
         userMapper.insertAdmin(username);
