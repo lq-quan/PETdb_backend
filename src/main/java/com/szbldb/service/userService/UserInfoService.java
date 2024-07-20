@@ -131,7 +131,7 @@ public class UserInfoService {
         if(!username.equals(usernameInJwt)) return false;
         String originPsw = PSWHelper.decodeRSAPsw(password);
         if(PSWHelper.checkPswIfWeak(originPsw)) return false;
-        password = BCrypt.hashpw(DigestUtils.sha256Hex(password + "petdatabase"), BCrypt.gensalt());
+        password = BCrypt.hashpw(DigestUtils.sha256Hex(originPsw + "petdatabase"), BCrypt.gensalt());
         if(MailHelper.verifyCode(jwtCode, code)){
             userMapper.modifyPassword(username, password);
             return true;
