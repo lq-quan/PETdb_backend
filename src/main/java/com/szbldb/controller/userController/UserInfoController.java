@@ -79,7 +79,7 @@ public class UserInfoController {
         if(userInfoService.modifyPsw(userPojo.getJwtCode(), username, userPojo.getPassword(), userPojo.getCode())){
             return Result.success();
         }
-        return Result.error("Wrong or expired code!", 50201);
+        return Result.error("Wrong or expired code! Code will be expired if you refresh the webpage!", 50201);
     }
 
     /**

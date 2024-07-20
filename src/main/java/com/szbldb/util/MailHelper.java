@@ -25,7 +25,7 @@ public class MailHelper {
     private static final String content2 = "\nIt's valid in 10 minutes.If it's not operated on your own, ignore the Email. \nPlease do not Reply";
     private static final Random random = new Random();
 
-    @Value("${mail.from}")
+    @Value("${MAIL_FROM}")
     private String initFrom;
 
     private static String from;

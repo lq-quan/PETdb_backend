@@ -5,10 +5,12 @@ import com.szbldb.exception.UserException;
 import com.szbldb.pojo.userInfoPojo.UserInfo;
 import com.szbldb.util.JWTHelper;
 import com.szbldb.util.MailHelper;
+import com.szbldb.util.PSWHelper;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -124,9 +126,12 @@ public class UserInfoService {
      * @author Quan Li 2024/7/10 16:24
      **/
     public boolean modifyPsw(String jwtCode, String username, String password, String code){
+        if(jwtCode == null || jwtCode.isEmpty()) return false;
         String usernameInJwt = JWTHelper.getUsername(jwtCode);
         if(!username.equals(usernameInJwt)) return false;
-        password = BCrypt.hashpw(password, BCrypt.gensalt());
+        String originPsw = PSWHelper.decodeRSAPsw(password);
+        if(PSWHelper.checkPswIfWeak(originPsw)) return false;
+        password = BCrypt.hashpw(DigestUtils.sha256Hex(password + "petdatabase"), BCrypt.gensalt());
         if(MailHelper.verifyCode(jwtCode, code)){
             userMapper.modifyPassword(username, password);
             return true;

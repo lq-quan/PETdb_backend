@@ -7,6 +7,7 @@ import com.szbldb.pojo.userPojo.UserPojo;
 import com.szbldb.service.userService.RegisterService;
 import com.szbldb.util.JWTHelper;
 import com.szbldb.util.MailHelper;
+import com.szbldb.util.PSWHelper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -39,8 +40,8 @@ public class RegisterController {
         if(username == null || email == null || username.isEmpty() || email.isEmpty() || password == null){
             return Result.error("Invalid data!", 50101);
         }
-        password = registerService.decodeRSAPsw(password);
-        if(registerService.checkPswIfWeak(password)){
+        password = PSWHelper.decodeRSAPsw(password);
+        if(PSWHelper.checkPswIfWeak(password)){
             return Result.error("Password is too weak or invalid!", 50104);
         }
         Map<String, Object> map = new HashMap<>();
@@ -129,7 +130,7 @@ public class RegisterController {
         String username = JWTHelper.getUsername(token);
         if(!"admin".equals(username)) return Result.error("You are not allowed to manage admin-accounts", 52002);
         if(registerService.createAdmin(user)) return Result.success();
-        else return Result.error("Failed to create. There may be duplicate username", 52008);
+        else return Result.error("Failed to create. There may be duplicate username or weak(invalid) password", 52008);
     }
 
     /**
